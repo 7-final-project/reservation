@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: reservation-service
+  profiles:
+    active: dev
