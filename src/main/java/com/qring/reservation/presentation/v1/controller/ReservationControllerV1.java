@@ -1,15 +1,13 @@
 package com.qring.reservation.presentation.v1.controller;
 
 import com.qring.reservation.application.v1.res.ResDTO;
+import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class ReservationControllerV1 {
@@ -35,4 +33,27 @@ public class ReservationControllerV1 {
                 HttpStatus.CREATED
         );
     }
+
+    @GetMapping("/v1/reservations/{reservationId}")
+    public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@PathVariable Long reservationId) {
+
+        // 더미데이터 ----------------------------------------------
+        ReservationEntity dummyReservationEntity = ReservationEntity.builder()
+                .userId(1L)
+                .restaurantId(501L)
+                .headCount(4)
+                .build();
+        // 추후 삭제 ----------------------------------------------
+
+        return new ResponseEntity<>(
+                ResDTO.<ReservationGetByIdResDTOV1>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("예약 상세 조회에 성공했습니다.")
+                        .data(ReservationGetByIdResDTOV1.of(dummyReservationEntity))
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+
 }
