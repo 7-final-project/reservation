@@ -6,6 +6,7 @@ import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
