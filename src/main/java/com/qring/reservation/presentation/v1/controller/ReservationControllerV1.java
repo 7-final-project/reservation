@@ -1,6 +1,6 @@
 package com.qring.reservation.presentation.v1.controller;
 
-import com.qring.reservation.application.global.ResDTO;
+import com.qring.reservation.application.global.dto.ResDTO;
 import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
