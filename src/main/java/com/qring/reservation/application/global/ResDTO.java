@@ -1,4 +1,4 @@
-package com.qring.reservation.application.v1.res;
+package com.qring.reservation.application.global;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
