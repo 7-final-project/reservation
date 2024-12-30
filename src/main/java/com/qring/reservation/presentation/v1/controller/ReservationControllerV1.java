@@ -5,6 +5,7 @@ import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
+import com.qring.reservation.infrastructure.docs.ReservationControllerSwagger;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
 import jakarta.validation.Valid;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-public class ReservationControllerV1 {
+public class ReservationControllerV1 implements ReservationControllerSwagger {
 
     @PostMapping("/v1/reservations")
     public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-User-Id") Long userId,
