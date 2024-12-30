@@ -117,4 +117,17 @@ public class ReservationControllerV1 {
                 HttpStatus.OK
         );
     }
+
+    @DeleteMapping("/v1/reservations/{reservationId}")
+    public ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Id") Long userId,
+                                                   @PathVariable Long reservationId) {
+
+        return new ResponseEntity<>(
+                ResDTO.builder()
+                        .code(HttpStatus.OK.value())
+                        .message("예약 삭제에 성공했습니다.")
+                        .build(),
+                HttpStatus.OK
+        );
+    }
 }
