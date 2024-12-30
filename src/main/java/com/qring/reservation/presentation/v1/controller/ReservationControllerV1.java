@@ -6,6 +6,7 @@ import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
+import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -98,6 +99,20 @@ public class ReservationControllerV1 {
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
                         .data(ReservationSearchResDTOV1.of(dummyPage))
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/v1/reservations/{reservationId}")
+    public ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Id") Long userId,
+                                                @PathVariable Long reservationId,
+                                                @RequestBody PutReservationReqDTOV1 dto) {
+
+        return new ResponseEntity<>(
+                ResDTO.builder()
+                        .code(HttpStatus.OK.value())
+                        .message("예약 상태 변경에 성공했습니다.")
                         .build(),
                 HttpStatus.OK
         );
