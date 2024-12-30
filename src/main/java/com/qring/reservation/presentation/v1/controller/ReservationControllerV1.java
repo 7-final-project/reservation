@@ -24,7 +24,7 @@ public class ReservationControllerV1 {
 
     @PostMapping("/v1/reservations")
     public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-User-Id") Long userId,
-                                                                  @RequestBody PostReservationReqDTOV1 dto) {
+                                                                  @Valid@RequestBody PostReservationReqDTOV1 dto) {
 
         // 더미데이터 ----------------------------------------------
         ReservationEntity dummyReservationEntity = ReservationEntity.builder()
@@ -37,7 +37,7 @@ public class ReservationControllerV1 {
         return new ResponseEntity<>(
                 ResDTO.<ReservationPostResDTOV1>builder()
                         .code(HttpStatus.CREATED.value())
-                        .message("예약 생성을 성공했습니다.")
+                        .message("예약 생성에 성공했습니다.")
                         .data(ReservationPostResDTOV1.of(dummyReservationEntity))
                         .build(),
                 HttpStatus.CREATED
