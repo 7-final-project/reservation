@@ -3,11 +3,19 @@ package com.qring.reservation.presentation.v1.controller;
 import com.qring.reservation.application.v1.res.ResDTO;
 import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
+import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 public class ReservationControllerV1 {
@@ -55,5 +63,42 @@ public class ReservationControllerV1 {
         );
     }
 
+    @GetMapping("/v1/reservations")
+    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchBy(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+                                                                      @RequestParam(name = "userId", required = false) Long userId,
+                                                                      @RequestParam(name = "reservationId", required = false) Long reservationId,
+                                                                      @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                                      @RequestParam(name = "sort", required = false) String sort) {
 
+        // 더미데이터 ----------------------------------------------
+        List<ReservationEntity> dummyReservations = List.of(
+                ReservationEntity.builder()
+                        .userId(1L)
+                        .restaurantId(501L)
+                        .headCount(4)
+                        .build(),
+                ReservationEntity.builder()
+                        .userId(2L)
+                        .restaurantId(501L)
+                        .headCount(2)
+                        .build(),
+                ReservationEntity.builder()
+                        .userId(1L)
+                        .restaurantId(701L)
+                        .headCount(6)
+                        .build()
+        );
+
+        Page<ReservationEntity> dummyPage = new PageImpl<>(dummyReservations, pageable, dummyReservations.size());
+        // 추후 삭제 ----------------------------------------------
+
+        return new ResponseEntity<>(
+                ResDTO.<ReservationSearchResDTOV1>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("예약 검색에 성공했습니다.")
+                        .data(ReservationSearchResDTOV1.of(dummyPage))
+                        .build(),
+                HttpStatus.OK
+        );
+    }
 }
