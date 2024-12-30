@@ -27,7 +27,7 @@ public interface ReservationControllerSwagger {
             @ApiResponse(responseCode = "201", description = "예약 생성 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 생성 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @PostMapping("/v1/reservations")
+    @PostMapping
     ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-User-Id") Long userId, @Valid@RequestBody PostReservationReqDTOV1 dto);
 
 
@@ -36,7 +36,7 @@ public interface ReservationControllerSwagger {
             @ApiResponse(responseCode = "200", description = "예약 조회 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 조회 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @GetMapping("/v1/reservations/{reservationId}")
+    @GetMapping("/{reservationId}")
     ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@PathVariable Long reservationId);
 
 
@@ -45,7 +45,7 @@ public interface ReservationControllerSwagger {
             @ApiResponse(responseCode = "200", description = "예약 검색 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 검색 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @GetMapping("/v1/reservations")
+    @GetMapping
     ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchBy(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
                                                                @RequestParam(name = "userId", required = false) Long userId,
                                                                @RequestParam(name = "reservationId", required = false) Long reservationId,
@@ -58,7 +58,7 @@ public interface ReservationControllerSwagger {
             @ApiResponse(responseCode = "200", description = "예약 수정 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 수정 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @PutMapping("/v1/reservations/{reservationId}")
+    @PutMapping("/{reservationId}")
     ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Id") Long userId, @PathVariable Long reservationId, @RequestBody PutReservationReqDTOV1 dto);
 
 
@@ -67,6 +67,6 @@ public interface ReservationControllerSwagger {
             @ApiResponse(responseCode = "200", description = "예약 삭제 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 삭제 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @DeleteMapping("/v1/reservations/{reservationId}")
+    @DeleteMapping("/{reservationId}")
     ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Id") Long userId, @PathVariable Long reservationId);
 }

@@ -21,9 +21,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/v1/reservations")
 public class ReservationControllerV1 implements ReservationControllerSwagger {
 
-    @PostMapping("/v1/reservations")
+    @PostMapping
     public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-User-Id") Long userId,
                                                                   @Valid@RequestBody PostReservationReqDTOV1 dto) {
 
@@ -45,7 +46,7 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
         );
     }
 
-    @GetMapping("/v1/reservations/{reservationId}")
+    @GetMapping("/{reservationId}")
     public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@PathVariable Long reservationId) {
 
         // 더미데이터 ----------------------------------------------
@@ -66,7 +67,7 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
         );
     }
 
-    @GetMapping("/v1/reservations")
+    @GetMapping
     public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchBy(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
                                                                       @RequestParam(name = "userId", required = false) Long userId,
                                                                       @RequestParam(name = "reservationId", required = false) Long reservationId,
@@ -105,7 +106,7 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
         );
     }
 
-    @PutMapping("/v1/reservations/{reservationId}")
+    @PutMapping("/{reservationId}")
     public ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Id") Long userId,
                                                 @PathVariable Long reservationId,
                                                 @RequestBody PutReservationReqDTOV1 dto) {
@@ -119,7 +120,7 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
         );
     }
 
-    @DeleteMapping("/v1/reservations/{reservationId}")
+    @DeleteMapping("/{reservationId}")
     public ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Id") Long userId,
                                                    @PathVariable Long reservationId) {
 
