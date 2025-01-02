@@ -4,11 +4,13 @@ import com.qring.reservation.application.global.dto.ResDTO;
 import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
+import com.qring.reservation.application.v1.service.ReservationServiceV1;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.infrastructure.docs.ReservationControllerSwagger;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -21,26 +23,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/v1/reservations")
 public class ReservationControllerV1 implements ReservationControllerSwagger {
+
+    private final ReservationServiceV1 reservationServiceV1;
 
     @PostMapping
     public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-User-Id") Long userId,
                                                                   @Valid@RequestBody PostReservationReqDTOV1 dto) {
 
-        // 더미데이터 ----------------------------------------------
-        ReservationEntity dummyReservationEntity = ReservationEntity.builder()
-                .userId(1L)
-                .restaurantId(501L)
-                .headCount(4)
-                .build();
-        // 추후 삭제 ----------------------------------------------
-
         return new ResponseEntity<>(
                 ResDTO.<ReservationPostResDTOV1>builder()
                         .code(HttpStatus.CREATED.value())
                         .message("예약 생성에 성공했습니다.")
-                        .data(ReservationPostResDTOV1.of(dummyReservationEntity))
+                        .data(reservationServiceV1.postBy(userId, dto))
                         .build(),
                 HttpStatus.CREATED
         );
