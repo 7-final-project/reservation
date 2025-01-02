@@ -26,7 +26,7 @@ public class ReservationEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "restaurant_Id", nullable = false)
+    @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;
 
     @Column(name = "status", nullable = false)
@@ -47,7 +47,7 @@ public class ReservationEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "created_by", updatable = false)
+    @Column(name = "created_by", nullable = false, updatable = false)
     private String createdBy;
 
     @Column(name = "modified_by", nullable = false)
@@ -57,18 +57,10 @@ public class ReservationEntity {
     private String deletedBy;
 
     @Builder
-    public ReservationEntity(Long userId, Long restaurantId, int headCount) {
+    public ReservationEntity(Long userId, Long restaurantId, ReservationStatus status, int headCount) {
         this.userId = userId;
         this.restaurantId = restaurantId;
-        this.status = ReservationStatus.CONFIRMED;
+        this.status = status;
         this.headCount = headCount;
-    }
-
-    public static ReservationEntity createReservationEntity(Long userId, Long restaurantId, int headCount) {
-        return ReservationEntity.builder()
-                .userId(userId)
-                .restaurantId(restaurantId)
-                .headCount(headCount)
-                .build();
     }
 }
