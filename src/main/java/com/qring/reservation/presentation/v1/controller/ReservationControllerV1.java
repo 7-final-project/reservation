@@ -46,8 +46,8 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
         );
     }
 
-    @GetMapping("/{reservationId}")
-    public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@PathVariable Long reservationId) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@PathVariable Long id) {
 
         // 더미데이터 ----------------------------------------------
         ReservationEntity dummyReservationEntity = ReservationEntity.builder()
@@ -70,7 +70,7 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
     @GetMapping
     public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchBy(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
                                                                       @RequestParam(name = "userId", required = false) Long userId,
-                                                                      @RequestParam(name = "reservationId", required = false) Long reservationId,
+                                                                      @RequestParam(name = "id", required = false) Long id,
                                                                       @RequestParam(name = "restaurantId", required = false) Long restaurantId,
                                                                       @RequestParam(name = "sort", required = false) String sort) {
 
@@ -106,9 +106,9 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
         );
     }
 
-    @PutMapping("/{reservationId}")
+    @PutMapping("/{id}")
     public ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Id") Long userId,
-                                                @PathVariable Long reservationId,
+                                                @PathVariable Long id,
                                                 @RequestBody PutReservationReqDTOV1 dto) {
 
         return new ResponseEntity<>(
@@ -120,9 +120,9 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
         );
     }
 
-    @DeleteMapping("/{reservationId}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Id") Long userId,
-                                                   @PathVariable Long reservationId) {
+                                                   @PathVariable Long id) {
 
         return new ResponseEntity<>(
                 ResDTO.builder()

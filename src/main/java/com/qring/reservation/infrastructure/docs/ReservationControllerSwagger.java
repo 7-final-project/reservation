@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Reservation", description = "생성, 조회, 검색, 수정, 삭제 관련 예약 API")
+@RequestMapping("/v1/reservations")
 public interface ReservationControllerSwagger {
 
     @Operation(summary = "예약 생성", description = "사용자의 ID 와 식당의 ID 를 기준으로 예약을 생성하는 API 입니다.")
@@ -36,8 +37,8 @@ public interface ReservationControllerSwagger {
             @ApiResponse(responseCode = "200", description = "예약 조회 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 조회 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @GetMapping("/{reservationId}")
-    ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@PathVariable Long reservationId);
+    @GetMapping("/{id}")
+    ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@PathVariable Long id);
 
 
     @Operation(summary = "예약 검색", description = "동적 조건을 기준으로 예약을 검색하는 API 입니다.")
@@ -48,7 +49,7 @@ public interface ReservationControllerSwagger {
     @GetMapping
     ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchBy(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
                                                                @RequestParam(name = "userId", required = false) Long userId,
-                                                               @RequestParam(name = "reservationId", required = false) Long reservationId,
+                                                               @RequestParam(name = "id", required = false) Long id,
                                                                @RequestParam(name = "restaurantId", required = false) Long restaurantId,
                                                                @RequestParam(name = "sort", required = false) String sort);
 
@@ -58,8 +59,8 @@ public interface ReservationControllerSwagger {
             @ApiResponse(responseCode = "200", description = "예약 수정 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 수정 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @PutMapping("/{reservationId}")
-    ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Id") Long userId, @PathVariable Long reservationId, @RequestBody PutReservationReqDTOV1 dto);
+    @PutMapping("/{id}")
+    ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id, @RequestBody PutReservationReqDTOV1 dto);
 
 
     @Operation(summary = "예약 삭제", description = "사용자의 ID 와 예약 ID 를 기준으로 예약을 삭제하는 API 입니다.")
@@ -67,6 +68,6 @@ public interface ReservationControllerSwagger {
             @ApiResponse(responseCode = "200", description = "예약 삭제 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 삭제 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @DeleteMapping("/{reservationId}")
-    ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Id") Long userId, @PathVariable Long reservationId);
+    @DeleteMapping("/{id}")
+    ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id);
 }
