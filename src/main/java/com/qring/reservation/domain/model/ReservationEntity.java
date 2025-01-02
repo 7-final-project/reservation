@@ -63,4 +63,13 @@ public class ReservationEntity {
         this.status = status;
         this.headCount = headCount;
     }
+
+    public static ReservationEntity createReservationEntity(Long userId, Long restaurantId, int headCount) {
+        return ReservationEntity.builder()
+                .userId(userId)
+                .restaurantId(restaurantId)
+                .status(ReservationStatus.CONFIRMED)
+                .headCount(headCount)
+                .build();
+    }
 }
