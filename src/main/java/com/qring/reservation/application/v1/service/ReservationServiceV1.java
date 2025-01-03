@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class ReservationServiceV1 {
@@ -31,6 +34,10 @@ public class ReservationServiceV1 {
     }
 
     private void publishReservationCreateEvent(Long reservationId) {
-        kafkaTemplate.send("reservation-create-event-topic", reservationId);
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("reservationId", reservationId);
+
+        kafkaTemplate.send("reservation-create-event-topic", event);
     }
 }
