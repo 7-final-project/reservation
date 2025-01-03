@@ -24,4 +24,3 @@ public class ReservationServiceV1 {
         return ReservationPostResDTOV1.of(reservationRepository.save(reservationEntityForSave));
     }
 }
-

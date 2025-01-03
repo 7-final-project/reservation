@@ -28,6 +28,10 @@ ext {
 }
 
 dependencies {
+    // Kafka
+    implementation 'org.apache.kafka:kafka-clients:3.5.1'
+    implementation 'org.springframework.kafka:spring-kafka'
+
     // swagger
     implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.3.0'
 
