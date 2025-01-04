@@ -72,4 +72,8 @@ public class ReservationEntity {
                 .headCount(headCount)
                 .build();
     }
+
+    public void changeReservationStatus(String reservationStatus) {
+        this.status = ReservationStatus.fromString(reservationStatus);
+    }
 }
