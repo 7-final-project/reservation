@@ -73,7 +73,7 @@ public class ReservationEntity {
                 .build();
     }
 
-    public void changeReservationStatus(String reservationStatus) {
+    public void updateReservationEntityStatus(String reservationStatus) {
         this.status = ReservationStatus.fromString(reservationStatus);
     }
 }

@@ -98,9 +98,12 @@ public class ReservationControllerV1 {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Id") Long userId,
+    public ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Role") String userRole,
+                                                @RequestHeader("X-User-Id") Long userId,
                                                 @PathVariable Long id,
                                                 @RequestBody PutReservationReqDTOV1 dto) {
+
+        reservationServiceV1.putBy(userRole, userId, id, dto);
 
         return new ResponseEntity<>(
                 ResDTO.builder()
