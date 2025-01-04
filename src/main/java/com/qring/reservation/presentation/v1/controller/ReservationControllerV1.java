@@ -25,7 +25,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/reservations")
-public class ReservationControllerV1 implements ReservationControllerSwagger {
+public class ReservationControllerV1 {
 
     private final ReservationServiceV1 reservationServiceV1;
 
@@ -44,21 +44,15 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@PathVariable Long id) {
-
-        // 더미데이터 ----------------------------------------------
-        ReservationEntity dummyReservationEntity = ReservationEntity.builder()
-                .userId(1L)
-                .restaurantId(501L)
-                .headCount(4)
-                .build();
-        // 추후 삭제 ----------------------------------------------
+    public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@RequestHeader("X-User-Role") String userRole,
+                                                                    @RequestHeader("X-User-Id") Long userId,
+                                                                    @PathVariable Long id) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationGetByIdResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 상세 조회에 성공했습니다.")
-                        .data(ReservationGetByIdResDTOV1.of(dummyReservationEntity))
+                        .data(reservationServiceV1.getBy(userRole, userId, id))
                         .build(),
                 HttpStatus.OK
         );

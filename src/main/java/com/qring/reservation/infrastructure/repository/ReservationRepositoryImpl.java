@@ -5,6 +5,8 @@ import com.qring.reservation.domain.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class ReservationRepositoryImpl implements ReservationRepository {
@@ -13,5 +15,9 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 
     public ReservationEntity save(ReservationEntity reservationEntity) {
         return jpaReservationRepository.save(reservationEntity);
+    }
+
+    public Optional<ReservationEntity> findByIdAndDeletedAtIsNull(Long id) {
+        return jpaReservationRepository.findById(id);
     }
 }
