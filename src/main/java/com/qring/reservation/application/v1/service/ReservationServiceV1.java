@@ -111,6 +111,41 @@ public class ReservationServiceV1 {
         reservationEntityForUpdate.updateReservationEntityStatus(dto.getReservation().getStatus());
     }
 
+    @Transactional
+    public void deleteBy(String userRole, Long userId, @PathVariable Long id){
+
+        ReservationEntity reservationEntityForDelete = getReservationEntityById(id);
+
+        String username = "test";
+        Long restaurantId = 1L;
+
+        // 대기 상태 확인 (대기중인 경우 삭제 불가) - 구현 예정
+
+        // 권한별 처리
+        switch (userRole) {
+            case "ADMIN":
+                // 관리자는 모든 예약 상태 변경 가능
+                break;
+
+            case "USER":
+                if (!reservationEntityForDelete.getUserId().equals(userId)) {
+                    throw new UnauthorizedAccessException("자신의 예약만 삭제할 수 있습니다.");
+                }
+                break;
+
+            case "OWNER":
+                if (!reservationEntityForDelete.getRestaurantId().equals(restaurantId)) {
+                    throw new UnauthorizedAccessException("자신의 식당 예약만 삭제할 수 있습니다.");
+                }
+                break;
+
+            default:
+                throw new BadRequestException("유효하지 않은 역할입니다: " + userRole);
+        }
+
+        reservationEntityForDelete.deleteReservationEntity(username);
+    }
+
     private void publishReservationCreateEvent(Long reservationId) {
 
         Map<String, Object> event = new HashMap<>();

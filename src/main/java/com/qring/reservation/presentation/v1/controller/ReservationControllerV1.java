@@ -115,8 +115,11 @@ public class ReservationControllerV1 {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Id") Long userId,
+    public ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Role") String userRole,
+                                                   @RequestHeader("X-User-Id") Long userId,
                                                    @PathVariable Long id) {
+
+        reservationServiceV1.deleteBy(userRole, userId, id);
 
         return new ResponseEntity<>(
                 ResDTO.builder()
