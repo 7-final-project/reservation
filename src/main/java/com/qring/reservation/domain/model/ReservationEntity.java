@@ -76,4 +76,9 @@ public class ReservationEntity {
     public void updateReservationEntityStatus(String reservationStatus) {
         this.status = ReservationStatus.fromString(reservationStatus);
     }
+
+    public void deleteReservationEntity(String username) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = username;
+    }
 }
