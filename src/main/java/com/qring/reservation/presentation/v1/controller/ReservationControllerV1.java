@@ -5,22 +5,17 @@ import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
 import com.qring.reservation.application.v1.service.ReservationServiceV1;
-import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.infrastructure.docs.ReservationControllerSwagger;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -58,40 +53,55 @@ public class ReservationControllerV1 {
         );
     }
 
-    @GetMapping
-    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchBy(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                      @RequestParam(name = "userId", required = false) Long userId,
-                                                                      @RequestParam(name = "id", required = false) Long id,
-                                                                      @RequestParam(name = "restaurantId", required = false) Long restaurantId,
-                                                                      @RequestParam(name = "sort", required = false) String sort) {
-
-        // 더미데이터 ----------------------------------------------
-        List<ReservationEntity> dummyReservations = List.of(
-                ReservationEntity.builder()
-                        .userId(1L)
-                        .restaurantId(501L)
-                        .headCount(4)
-                        .build(),
-                ReservationEntity.builder()
-                        .userId(2L)
-                        .restaurantId(501L)
-                        .headCount(2)
-                        .build(),
-                ReservationEntity.builder()
-                        .userId(1L)
-                        .restaurantId(701L)
-                        .headCount(6)
-                        .build()
-        );
-
-        Page<ReservationEntity> dummyPage = new PageImpl<>(dummyReservations, pageable, dummyReservations.size());
-        // 추후 삭제 ----------------------------------------------
+    @GetMapping("/admin")
+    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByAdmin(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+                                                                           @RequestHeader("X-User-Role") String userRole,
+                                                                           @RequestParam(name = "id", required = false) Long id,
+                                                                           @RequestParam(name = "userId", required = false) Long userId,
+                                                                           @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                                           @RequestParam(name = "sort", required = false) String sort) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationSearchResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
-                        .data(ReservationSearchResDTOV1.of(dummyPage))
+                        .data(reservationServiceV1.searchByAdmin(pageable, userRole, id, userId, restaurantId, sort))
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/customer")
+    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByCustomer(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+                                                                              @RequestHeader("X-User-Role") String userRole,
+                                                                              @RequestHeader("X-User-Id") Long userId,
+                                                                              @RequestParam(name = "id", required = false) Long id,
+                                                                              @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                                              @RequestParam(name = "sort", required = false) String sort) {
+
+        return new ResponseEntity<>(
+                ResDTO.<ReservationSearchResDTOV1>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("예약 검색에 성공했습니다.")
+                        .data(reservationServiceV1.searchByCustomer(pageable, userRole, userId, id, restaurantId, sort))
+                        .build(),
+                HttpStatus.OK
+        );
+    }
+
+    @GetMapping("/owner")
+    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByOwner(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+                                                                           @RequestHeader("X-User-Role") String userRole,
+                                                                           @RequestParam(name = "id", required = false) Long id,
+                                                                           @RequestParam(name = "userId", required = false) Long userId,
+                                                                           @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                                           @RequestParam(name = "sort", required = false) String sort) {
+
+        return new ResponseEntity<>(
+                ResDTO.<ReservationSearchResDTOV1>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("예약 검색에 성공했습니다.")
+                        .data(reservationServiceV1.searchByOwner(pageable, userRole, id, userId, restaurantId, sort))
                         .build(),
                 HttpStatus.OK
         );
