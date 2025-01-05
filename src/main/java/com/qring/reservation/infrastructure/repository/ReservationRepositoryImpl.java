@@ -6,13 +6,15 @@ import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -36,28 +38,72 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         QReservationEntity reservationEntity = QReservationEntity.reservationEntity;
 
         // 권한 기반 조건 생성
-        BooleanExpression roleCondition = getRoleCondition(userRole, userId, restaurantId);
+        BooleanExpression roleCondition = getRoleCondition(userRole, userId);
 
         // Query 실행
-        var results = jpaQueryFactory
+        List<ReservationEntity> results = jpaQueryFactory
                 .selectFrom(reservationEntity)
                 .where(
+                        roleCondition,
+                        reservationEntity.deletedAt.isNull(),
                         idEq(id, reservationEntity),
                         userIdEq(userId, reservationEntity),
-                        restaurantIdEq(restaurantId, reservationEntity),
-                        reservationEntity.deletedAt.isNull(),
-                        roleCondition
+                        restaurantIdEq(restaurantId, reservationEntity)
                 )
                 .orderBy(getOrderSpecifier(sort, reservationEntity))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .fetchResults();
+                .fetch();
 
-        return new PageImpl<>(results.getResults(), pageable, results.getTotal());
+        JPQLQuery<Long> countQuery = jpaQueryFactory
+                .select(reservationEntity.count())
+                .from(reservationEntity)
+                .where(
+                        roleCondition,
+                        reservationEntity.deletedAt.isNull(),
+                        idEq(id, reservationEntity),
+                        userIdEq(userId, reservationEntity),
+                        restaurantIdEq(restaurantId, reservationEntity)
+                );
+
+        return PageableExecutionUtils.getPage(results, pageable, countQuery::fetchOne);
+    }
+
+    public Page<ReservationEntity> findReservationPageByDeletedAtIsNullWithOwnerConditions(Pageable pageable, List<Long> restaurantIdListOfOwner, Long userId, Long restaurantId, Long id, String sort) {
+
+        QReservationEntity reservationEntity = QReservationEntity.reservationEntity;
+
+        // Query 실행
+        List<ReservationEntity> results = jpaQueryFactory
+                .selectFrom(reservationEntity)
+                .where(
+                        restaurantIdIn(restaurantIdListOfOwner, reservationEntity),
+                        reservationEntity.deletedAt.isNull(),
+                        idEq(id, reservationEntity),
+                        userIdEq(userId, reservationEntity),
+                        restaurantIdEq(restaurantId, reservationEntity)
+                )
+                .orderBy(getOrderSpecifier(sort, reservationEntity))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        JPQLQuery<Long> countQuery = jpaQueryFactory
+                .select(reservationEntity.count())
+                .from(reservationEntity)
+                .where(
+                        restaurantIdIn(restaurantIdListOfOwner, reservationEntity),
+                        reservationEntity.deletedAt.isNull(),
+                        idEq(id, reservationEntity),
+                        userIdEq(userId, reservationEntity),
+                        restaurantIdEq(restaurantId, reservationEntity)
+                );
+
+        return PageableExecutionUtils.getPage(results, pageable, countQuery::fetchOne);
     }
 
     // 권한별 조건 메서드
-    private BooleanExpression getRoleCondition(String userRole, Long userId, Long restaurantId) {
+    private BooleanExpression getRoleCondition(String userRole, Long userId) {
         QReservationEntity reservation = QReservationEntity.reservationEntity;
 
         switch (userRole) {
@@ -65,8 +111,6 @@ public class ReservationRepositoryImpl implements ReservationRepository {
                 return null; // 관리자는 모든 데이터를 조회 가능
             case "고객":
                 return reservation.userId.eq(userId); // 고객은 자신의 예약만 조회 가능
-            case "점주":
-                return reservation.restaurantId.eq(restaurantId); // 주인은 자신의 식당 예약만 조회 가능
             default:
                 throw new BadRequestException("유효하지 않은 역할입니다: " + userRole);
         }
@@ -85,8 +129,15 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         return restaurantId != null ? reservationEntity.restaurantId.eq(restaurantId) : null;
     }
 
+    private BooleanExpression restaurantIdIn(List<Long> restaurantIdListOfOwner, QReservationEntity reservationEntity) {
+        return restaurantIdListOfOwner != null && !restaurantIdListOfOwner.isEmpty() ? reservationEntity.restaurantId.in(restaurantIdListOfOwner) : null;
+    }
+
     // 정렬 로직
     private OrderSpecifier<?> getOrderSpecifier(String sort, QReservationEntity reservationEntity) {
+        if (sort == null) {
+            return reservationEntity.createdAt.desc();
+        }
 
         switch (sort) {
             case "SMALLEST":

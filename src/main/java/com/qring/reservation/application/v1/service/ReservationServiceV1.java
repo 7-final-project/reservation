@@ -102,17 +102,17 @@ public class ReservationServiceV1 {
     }
 
     @Transactional(readOnly = true)
-    public ReservationSearchResDTOV1 searchByOwner(Pageable pageable, String passport, Long userId, Long id, String sort) {
+    public ReservationSearchResDTOV1 searchByOwner(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
 
         String role = PassportUtil.getRole(passport);
         Long userIdOfOwner = PassportUtil.getUserId(passport);
 
         // 점주의 소유 식당 목록 - 구현 예정
-        Long restaurantId = 1L;
+        List<Long> restaurantIdListOfOwner = Arrays.asList(1L, 6L);
 
         validateRole(role,"점주");
 
-        Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(pageable, role, userId, restaurantId, id, sort);
+        Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(pageable, restaurantIdListOfOwner, userId, restaurantId, id, sort);
 
         return ReservationSearchResDTOV1.of(reservationEntityPage);
     }

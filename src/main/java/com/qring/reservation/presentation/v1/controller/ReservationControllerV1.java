@@ -64,7 +64,7 @@ public class ReservationControllerV1 {
                 ResDTO.<ReservationSearchResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByAdmin(pageable, passport, id, userId, restaurantId, sort))
+                        .data(reservationServiceV1.searchByAdmin(pageable, passport, userId, restaurantId, id, sort))
                         .build(),
                 HttpStatus.OK
         );
@@ -81,7 +81,7 @@ public class ReservationControllerV1 {
                 ResDTO.<ReservationSearchResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByCustomer(pageable, passport, id, restaurantId, sort))
+                        .data(reservationServiceV1.searchByCustomer(pageable, passport, restaurantId, id, sort))
                         .build(),
                 HttpStatus.OK
         );
@@ -91,6 +91,7 @@ public class ReservationControllerV1 {
     public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByOwner(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
                                                                            @RequestHeader("X-Passport-Token") String passport,
                                                                            @RequestParam(name = "userId", required = false) Long userId,
+                                                                           @RequestParam(name = "restaurantId", required = false) Long restaurantId,
                                                                            @RequestParam(name = "id", required = false) Long id,
                                                                            @RequestParam(name = "sort", required = false) String sort) {
 
@@ -98,7 +99,7 @@ public class ReservationControllerV1 {
                 ResDTO.<ReservationSearchResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByOwner(pageable, passport, userId, id, sort))
+                        .data(reservationServiceV1.searchByOwner(pageable, passport, userId, restaurantId, id, sort))
                         .build(),
                 HttpStatus.OK
         );
