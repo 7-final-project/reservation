@@ -31,7 +31,7 @@ public class ReservationRepositoryImpl implements ReservationRepository {
     }
 
     // QueryDSL 동적 쿼리
-    public Page<ReservationEntity> findReservationPageByDeletedAtIsNullWithConditions(Pageable pageable, String userRole, Long id, Long userId, Long restaurantId, String sort) {
+    public Page<ReservationEntity> findReservationPageByDeletedAtIsNullWithConditions(Pageable pageable, String userRole, Long userId, Long restaurantId, Long id, String sort) {
 
         QReservationEntity reservationEntity = QReservationEntity.reservationEntity;
 
@@ -61,11 +61,11 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         QReservationEntity reservation = QReservationEntity.reservationEntity;
 
         switch (userRole) {
-            case "ADMIN":
+            case "관리자":
                 return null; // 관리자는 모든 데이터를 조회 가능
-            case "USER":
+            case "고객":
                 return reservation.userId.eq(userId); // 고객은 자신의 예약만 조회 가능
-            case "OWNER":
+            case "점주":
                 return reservation.restaurantId.eq(restaurantId); // 주인은 자신의 식당 예약만 조회 가능
             default:
                 throw new BadRequestException("유효하지 않은 역할입니다: " + userRole);

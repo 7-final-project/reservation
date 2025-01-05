@@ -25,29 +25,28 @@ public class ReservationControllerV1 {
     private final ReservationServiceV1 reservationServiceV1;
 
     @PostMapping
-    public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-User-Id") Long userId,
+    public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-Passport-Token") String passport,
                                                                   @Valid@RequestBody PostReservationReqDTOV1 dto) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationPostResDTOV1>builder()
                         .code(HttpStatus.CREATED.value())
                         .message("예약 생성에 성공했습니다.")
-                        .data(reservationServiceV1.postBy(userId, dto))
+                        .data(reservationServiceV1.postBy(passport, dto))
                         .build(),
                 HttpStatus.CREATED
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@RequestHeader("X-User-Role") String userRole,
-                                                                    @RequestHeader("X-User-Id") Long userId,
+    public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@RequestHeader("X-Passport-Token") String passport,
                                                                     @PathVariable Long id) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationGetByIdResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 상세 조회에 성공했습니다.")
-                        .data(reservationServiceV1.getBy(userRole, userId, id))
+                        .data(reservationServiceV1.getBy(passport, id))
                         .build(),
                 HttpStatus.OK
         );
@@ -55,17 +54,17 @@ public class ReservationControllerV1 {
 
     @GetMapping("/admin")
     public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByAdmin(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                           @RequestHeader("X-User-Role") String userRole,
-                                                                           @RequestParam(name = "id", required = false) Long id,
+                                                                           @RequestHeader("X-Passport-Token") String passport,
                                                                            @RequestParam(name = "userId", required = false) Long userId,
                                                                            @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                                           @RequestParam(name = "id", required = false) Long id,
                                                                            @RequestParam(name = "sort", required = false) String sort) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationSearchResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByAdmin(pageable, userRole, id, userId, restaurantId, sort))
+                        .data(reservationServiceV1.searchByAdmin(pageable, passport, id, userId, restaurantId, sort))
                         .build(),
                 HttpStatus.OK
         );
@@ -73,17 +72,16 @@ public class ReservationControllerV1 {
 
     @GetMapping("/customer")
     public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByCustomer(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                              @RequestHeader("X-User-Role") String userRole,
-                                                                              @RequestHeader("X-User-Id") Long userId,
-                                                                              @RequestParam(name = "id", required = false) Long id,
+                                                                              @RequestHeader("X-Passport-Token") String passport,
                                                                               @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                                              @RequestParam(name = "id", required = false) Long id,
                                                                               @RequestParam(name = "sort", required = false) String sort) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationSearchResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByCustomer(pageable, userRole, userId, id, restaurantId, sort))
+                        .data(reservationServiceV1.searchByCustomer(pageable, passport, id, restaurantId, sort))
                         .build(),
                 HttpStatus.OK
         );
@@ -91,29 +89,27 @@ public class ReservationControllerV1 {
 
     @GetMapping("/owner")
     public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByOwner(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                           @RequestHeader("X-User-Role") String userRole,
-                                                                           @RequestParam(name = "id", required = false) Long id,
+                                                                           @RequestHeader("X-Passport-Token") String passport,
                                                                            @RequestParam(name = "userId", required = false) Long userId,
-                                                                           @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                                           @RequestParam(name = "id", required = false) Long id,
                                                                            @RequestParam(name = "sort", required = false) String sort) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationSearchResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByOwner(pageable, userRole, id, userId, restaurantId, sort))
+                        .data(reservationServiceV1.searchByOwner(pageable, passport, userId, id, sort))
                         .build(),
                 HttpStatus.OK
         );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-User-Role") String userRole,
-                                                @RequestHeader("X-User-Id") Long userId,
+    public ResponseEntity<ResDTO<Object>> putBy(@RequestHeader("X-Passport-Token") String passport,
                                                 @PathVariable Long id,
                                                 @RequestBody PutReservationReqDTOV1 dto) {
 
-        reservationServiceV1.putBy(userRole, userId, id, dto);
+        reservationServiceV1.putBy(passport, id, dto);
 
         return new ResponseEntity<>(
                 ResDTO.builder()
@@ -125,11 +121,10 @@ public class ReservationControllerV1 {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-User-Role") String userRole,
-                                                   @RequestHeader("X-User-Id") Long userId,
+    public ResponseEntity<ResDTO<Object>> deleteBy(@RequestHeader("X-Passport-Token") String passport,
                                                    @PathVariable Long id) {
 
-        reservationServiceV1.deleteBy(userRole, userId, id);
+        reservationServiceV1.deleteBy(passport, id);
 
         return new ResponseEntity<>(
                 ResDTO.builder()

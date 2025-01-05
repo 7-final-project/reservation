@@ -12,6 +12,6 @@ public interface ReservationRepository {
 
     Optional<ReservationEntity> findByIdAndDeletedAtIsNull(Long id);
 
-    Page<ReservationEntity> findReservationPageByDeletedAtIsNullWithConditions(Pageable pageable, String userRole, Long id, Long userId, Long restaurantId, String sort);
+    Page<ReservationEntity> findReservationPageByDeletedAtIsNullWithConditions(Pageable pageable, String userRole, Long userId, Long restaurantId, Long id, String sort);
 
 }

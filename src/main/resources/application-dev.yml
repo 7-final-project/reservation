@@ -24,6 +24,10 @@ spring:
   config:
     import: classpath:application-key.yml
 
+service:
+  jwt:
+    secret-key: ${JWT_SECRET_KEY}
+
 eureka:
   client:
     service-url:
