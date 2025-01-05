@@ -39,7 +39,7 @@ public class ReservationServiceV1 {
 
         reservationRepository.save(reservationEntityForSave);
 
-        publishReservationCreateEvent(reservationEntityForSave.getId());
+        //publishReservationCreateEvent(reservationEntityForSave.getId());
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
     }

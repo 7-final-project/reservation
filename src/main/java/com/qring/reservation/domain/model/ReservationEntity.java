@@ -10,12 +10,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "p_reservation")
 public class ReservationEntity {
 
@@ -47,9 +51,11 @@ public class ReservationEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @CreatedBy
     @Column(name = "created_by", nullable = false, updatable = false)
     private String createdBy;
 
+    @LastModifiedBy
     @Column(name = "modified_by", nullable = false)
     private String modifiedBy;
 
