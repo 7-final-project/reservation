@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/reservations")
-public class ReservationControllerV1 {
+public class ReservationControllerV1 implements ReservationControllerSwagger {
 
     private final ReservationServiceV1 reservationServiceV1;
 
