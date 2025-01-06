@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class ReservationPostResDTOV1 {
 
     private Reservation reservation;
+    private ReservationInfo reservationInfo;
 
     public static ReservationPostResDTOV1 of(ReservationEntity reservationEntity) {
         return ReservationPostResDTOV1.builder()
@@ -40,6 +41,23 @@ public class ReservationPostResDTOV1 {
                     .restaurantId(reservationEntity.getRestaurantId())
                     .status(reservationEntity.getStatus())
                     .headCount(reservationEntity.getHeadCount())
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReservationInfo {
+
+        private Long id;
+        private Long restaurantId;
+
+        public static ReservationInfo from(Long id, Long restaurantId) {
+            return ReservationInfo.builder()
+                    .id(id)
+                    .restaurantId(restaurantId)
                     .build();
         }
     }

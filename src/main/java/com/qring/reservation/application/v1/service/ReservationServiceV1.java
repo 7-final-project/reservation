@@ -39,7 +39,12 @@ public class ReservationServiceV1 {
 
         reservationRepository.save(reservationEntityForSave);
 
-        //publishReservationCreateEvent(reservationEntityForSave.getId());
+        ReservationPostResDTOV1.ReservationInfo reservationInfo = ReservationPostResDTOV1.ReservationInfo.from(
+                reservationEntityForSave.getId(),
+                reservationEntityForSave.getRestaurantId()
+        );
+
+        publishReservationCreateEvent(reservationInfo);
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
     }
@@ -189,12 +194,9 @@ public class ReservationServiceV1 {
         reservationEntityForDelete.deleteReservationEntity(username);
     }
 
-    private void publishReservationCreateEvent(Long reservationId) {
+    private void publishReservationCreateEvent(ReservationPostResDTOV1.ReservationInfo reservationInfo) {
 
-        Map<String, Object> event = new HashMap<>();
-        event.put("reservationId", reservationId);
-
-        kafkaTemplate.send("reservation-create-event-topic", event);
+        kafkaTemplate.send("reservation-create-event-topic", reservationInfo);
     }
 
     private ReservationEntity getReservationEntityById(Long id) {
