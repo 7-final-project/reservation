@@ -29,7 +29,7 @@ public class ReservationServiceV1 {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Transactional
-    public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto){
+    public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
 
         ReservationEntity reservationEntityForSave = ReservationEntity.createReservationEntity(
                 PassportUtil.getUserId(passport),
@@ -55,7 +55,7 @@ public class ReservationServiceV1 {
         String role = PassportUtil.getRole(passport);
         Long userId = PassportUtil.getUserId(passport);
 
-        ReservationEntity reservationEntityForRead = getReservationEntityById(id);
+        ReservationEntity reservationEntityForMapping = getReservationEntityById(id);
 
         Long restaurantId = 1L;
 
@@ -65,12 +65,12 @@ public class ReservationServiceV1 {
                 // 관리자는 모든 예약에 접근 가능
                 break;
             case "고객":
-                if (!reservationEntityForRead.getUserId().equals(userId)) {
+                if (!reservationEntityForMapping.getUserId().equals(userId)) {
                     throw new UnauthorizedAccessException("자신의 예약만 조회할 수 있습니다.");
                 }
                 break;
             case "점주":
-                if (!reservationEntityForRead.getRestaurantId().equals(restaurantId)) {
+                if (!reservationEntityForMapping.getRestaurantId().equals(restaurantId)) {
                     throw new UnauthorizedAccessException("자신의 식당 예약만 조회할 수 있습니다.");
                 }
                 break;
@@ -78,7 +78,7 @@ public class ReservationServiceV1 {
                 throw new BadRequestException("유효하지 않은 역할입니다: " + role);
         }
 
-        return ReservationGetByIdResDTOV1.of(reservationEntityForRead);
+        return ReservationGetByIdResDTOV1.of(reservationEntityForMapping);
     }
 
     @Transactional(readOnly = true)
@@ -86,7 +86,7 @@ public class ReservationServiceV1 {
 
         String role = PassportUtil.getRole(passport);
 
-        validateRole(role,"관리자");
+        validateUserRole(role, "관리자");
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(pageable, role, userId, restaurantId, id, sort);
 
@@ -99,7 +99,7 @@ public class ReservationServiceV1 {
         String role = PassportUtil.getRole(passport);
         Long userId = PassportUtil.getUserId(passport);
 
-        validateRole(role,"고객");
+        validateUserRole(role, "고객");
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(pageable, role, userId, restaurantId, id, sort);
 
@@ -115,7 +115,7 @@ public class ReservationServiceV1 {
         // 점주의 소유 식당 목록 - 구현 예정
         List<Long> restaurantIdListOfOwner = Arrays.asList(1L, 6L);
 
-        validateRole(role,"점주");
+        validateUserRole(role, "점주");
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(pageable, restaurantIdListOfOwner, userId, restaurantId, id, sort);
 
@@ -123,17 +123,17 @@ public class ReservationServiceV1 {
     }
 
     @Transactional
-    public void putBy(String passport, Long id, PutReservationReqDTOV1 dto){
+    public void putBy(String passport, Long id, PutReservationReqDTOV1 dto) {
 
         String role = PassportUtil.getRole(passport);
         Long userId = PassportUtil.getUserId(passport);
 
-        ReservationEntity reservationEntityForUpdate = getReservationEntityById(id);
+        ReservationEntity reservationEntityForModify = getReservationEntityById(id);
 
         Long restaurantId = 1L;
 
         // 예약 상태 확인 (취소 상태인 경우 수정 불가)
-        if (reservationEntityForUpdate.getStatus() == ReservationStatus.CANCELLED) {
+        if (reservationEntityForModify.getStatus() == ReservationStatus.CANCELLED) {
             throw new BadRequestException("이미 취소된 예약입니다.");
         }
 
@@ -143,12 +143,12 @@ public class ReservationServiceV1 {
                 // 관리자는 모든 예약 상태 변경 가능
                 break;
             case "고객":
-                if (!reservationEntityForUpdate.getUserId().equals(userId)) {
+                if (!reservationEntityForModify.getUserId().equals(userId)) {
                     throw new UnauthorizedAccessException("자신의 예약만 취소할 수 있습니다.");
                 }
                 break;
             case "점주":
-                if (!reservationEntityForUpdate.getRestaurantId().equals(restaurantId)) {
+                if (!reservationEntityForModify.getRestaurantId().equals(restaurantId)) {
                     throw new UnauthorizedAccessException("자신의 식당 예약만 취소할 수 있습니다.");
                 }
                 break;
@@ -156,11 +156,11 @@ public class ReservationServiceV1 {
                 throw new BadRequestException("유효하지 않은 역할입니다: " + role);
         }
 
-        reservationEntityForUpdate.updateReservationEntityStatus(dto.getReservation().getStatus());
+        reservationEntityForModify.updateReservationEntityStatus(dto.getReservation().getStatus());
     }
 
     @Transactional
-    public void deleteBy(String passport, Long id){
+    public void deleteBy(String passport, Long id) {
 
         String role = PassportUtil.getRole(passport);
         Long userId = PassportUtil.getUserId(passport);
@@ -206,9 +206,9 @@ public class ReservationServiceV1 {
     }
 
     // 권한 검증
-    private void validateRole(String role, String requiredRole) {
+    private void validateUserRole(String role, String requiredRole) {
         if (!role.equals(requiredRole)) {
-            throw new UnauthorizedAccessException("올바른 권한이 아닙니다.");
+            throw new UnauthorizedAccessException("접근 권한이 없습니다");
         }
     }
 }
