@@ -3,6 +3,7 @@ package com.qring.reservation.application.v1.service;
 import com.qring.reservation.application.global.exception.BadRequestException;
 import com.qring.reservation.application.global.exception.EntityNotFoundException;
 import com.qring.reservation.application.global.exception.UnauthorizedAccessException;
+import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
 import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
@@ -15,7 +16,6 @@ import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +26,7 @@ import java.util.*;
 public class ReservationServiceV1 {
 
     private final ReservationRepository reservationRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaMessageProducerV1 kafkaMessageProducerV1;
 
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
@@ -44,7 +44,7 @@ public class ReservationServiceV1 {
                 reservationEntityForSave.getRestaurantId()
         );
 
-        publishReservationCreateEvent(reservationInfo);
+        kafkaMessageProducerV1.publishReservationCreateEvent(reservationInfo);
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
     }
@@ -192,11 +192,6 @@ public class ReservationServiceV1 {
         }
 
         reservationEntityForDelete.deleteReservationEntity(username);
-    }
-
-    private void publishReservationCreateEvent(ReservationPostResDTOV1.ReservationInfo reservationInfo) {
-
-        kafkaTemplate.send("reservation-create-event-topic", reservationInfo);
     }
 
     private ReservationEntity getReservationEntityById(Long id) {
