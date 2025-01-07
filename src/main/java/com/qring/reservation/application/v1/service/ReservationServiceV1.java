@@ -1,6 +1,5 @@
 package com.qring.reservation.application.v1.service;
 
-import com.qring.reservation.application.global.dto.ResDTO;
 import com.qring.reservation.application.global.exception.BadRequestException;
 import com.qring.reservation.application.global.exception.EntityNotFoundException;
 import com.qring.reservation.application.global.exception.UnauthorizedAccessException;
@@ -8,7 +7,6 @@ import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
 import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
-import com.qring.reservation.application.v1.res.RestaurantGetByIdResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
@@ -141,9 +139,14 @@ public class ReservationServiceV1 {
 
         ReservationEntity reservationEntityForDelete = getReservationEntityById(id);
 
-        // 대기 상태 확인 (대기중인 경우 삭제 불가) - 구현 예정
+        if (!PassportUtil.getUserId(passport).equals(reservationEntityForDelete.getUserId())) {
+            throw new UnauthorizedAccessException("자신의 예약만 접근할 수 있습니다.");
+        }
 
-        validateAccess(passport, reservationEntityForDelete.getUserId(), reservationEntityForDelete.getRestaurantId());
+        // 대기 상태 확인 (대기중인 경우 삭제 불가)
+        if (reservationEntityForDelete.getStatus() == ReservationStatus.WAITING) {
+            throw new BadRequestException("현재 대기중인 예약입니다.");
+        }
 
         reservationEntityForDelete.deleteReservationEntity(PassportUtil.getUsername(passport));
     }
