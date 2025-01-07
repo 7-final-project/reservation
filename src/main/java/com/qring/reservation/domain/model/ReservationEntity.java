@@ -10,12 +10,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "p_reservation")
 public class ReservationEntity {
 
@@ -26,7 +30,7 @@ public class ReservationEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "restaurant_Id", nullable = false)
+    @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;
 
     @Column(name = "status", nullable = false)
@@ -47,9 +51,11 @@ public class ReservationEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "created_by", updatable = false)
+    @CreatedBy
+    @Column(name = "created_by", nullable = false, updatable = false)
     private String createdBy;
 
+    @LastModifiedBy
     @Column(name = "modified_by", nullable = false)
     private String modifiedBy;
 
@@ -57,10 +63,28 @@ public class ReservationEntity {
     private String deletedBy;
 
     @Builder
-    public ReservationEntity(Long userId, Long restaurantId, int headCount) {
+    public ReservationEntity(Long userId, Long restaurantId, ReservationStatus status, int headCount) {
         this.userId = userId;
         this.restaurantId = restaurantId;
-        this.status = ReservationStatus.CONFIRMED;
+        this.status = status;
         this.headCount = headCount;
+    }
+
+    public static ReservationEntity createReservationEntity(Long userId, Long restaurantId, int headCount) {
+        return ReservationEntity.builder()
+                .userId(userId)
+                .restaurantId(restaurantId)
+                .status(ReservationStatus.CONFIRMED)
+                .headCount(headCount)
+                .build();
+    }
+
+    public void updateReservationEntityStatus(String reservationStatus) {
+        this.status = ReservationStatus.fromString(reservationStatus);
+    }
+
+    public void deleteReservationEntity(String username) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = username;
     }
 }

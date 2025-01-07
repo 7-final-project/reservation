@@ -15,8 +15,18 @@ spring:
         format_sql: true
     open-in-view: false
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
   config:
     import: classpath:application-key.yml
+
+service:
+  jwt:
+    secret-key: ${JWT_SECRET_KEY}
 
 eureka:
   client:

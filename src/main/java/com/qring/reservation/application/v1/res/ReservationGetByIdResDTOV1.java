@@ -27,7 +27,7 @@ public class ReservationGetByIdResDTOV1 {
     @AllArgsConstructor
     public static class Reservation {
 
-        private Long reservationId;
+        private Long id;
         private Long userId;
         private Long restaurantId;
         private ReservationStatus status;
@@ -35,7 +35,7 @@ public class ReservationGetByIdResDTOV1 {
 
         public static Reservation from(ReservationEntity reservationEntity) {
             return Reservation.builder()
-                    .reservationId(reservationEntity.getId())
+                    .id(reservationEntity.getId())
                     .userId(reservationEntity.getUserId())
                     .restaurantId(reservationEntity.getRestaurantId())
                     .status(reservationEntity.getStatus())
