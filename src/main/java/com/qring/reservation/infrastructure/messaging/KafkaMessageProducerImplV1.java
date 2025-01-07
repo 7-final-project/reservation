@@ -16,4 +16,9 @@ public class KafkaMessageProducerImplV1 implements KafkaMessageProducerV1 {
 
         kafkaTemplate.send("reservation-create-event-topic", reservationInfo);
     }
+
+    public void publishReservationUpdateEvent(ReservationPostResDTOV1.ReservationInfo reservationInfo) {
+
+        kafkaTemplate.send("reservation-update-event-topic", reservationInfo);
+    }
 }

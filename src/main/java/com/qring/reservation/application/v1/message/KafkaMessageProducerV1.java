@@ -6,4 +6,6 @@ public interface KafkaMessageProducerV1 {
 
     void publishReservationCreateEvent(ReservationPostResDTOV1.ReservationInfo reservationInfo);
 
+    void publishReservationUpdateEvent(ReservationPostResDTOV1.ReservationInfo reservationInfo);
+
 }

@@ -125,11 +125,20 @@ public class ReservationServiceV1 {
 
         ReservationEntity reservationEntityForModify = getReservationEntityById(id);
 
+        validateAccess(passport, reservationEntityForModify.getUserId(), reservationEntityForModify.getRestaurantId());
+
         if (reservationEntityForModify.getStatus() == ReservationStatus.CANCELLED) {
             throw new BadRequestException("이미 취소된 예약입니다.");
+        } else if (reservationEntityForModify.getStatus() == ReservationStatus.SEATED){
+            throw new BadRequestException("이미 입장한 예약입니다.");
         }
 
-        validateAccess(passport, reservationEntityForModify.getUserId(), reservationEntityForModify.getRestaurantId());
+        ReservationPostResDTOV1.ReservationInfo reservationInfo = ReservationPostResDTOV1.ReservationInfo.from(
+                reservationEntityForModify.getId(),
+                reservationEntityForModify.getRestaurantId()
+        );
+
+        kafkaMessageProducerV1.publishReservationUpdateEvent(reservationInfo);
 
         reservationEntityForModify.updateReservationEntityStatus(dto.getReservation().getStatus());
     }
