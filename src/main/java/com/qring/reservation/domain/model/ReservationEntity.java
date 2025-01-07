@@ -74,7 +74,7 @@ public class ReservationEntity {
         return ReservationEntity.builder()
                 .userId(userId)
                 .restaurantId(restaurantId)
-                .status(ReservationStatus.CONFIRMED)
+                .status(ReservationStatus.WAITING)
                 .headCount(headCount)
                 .build();
     }
