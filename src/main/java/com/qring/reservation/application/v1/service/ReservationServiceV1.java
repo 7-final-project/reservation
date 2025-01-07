@@ -1,5 +1,6 @@
 package com.qring.reservation.application.v1.service;
 
+import com.qring.reservation.application.global.dto.ResDTO;
 import com.qring.reservation.application.global.exception.BadRequestException;
 import com.qring.reservation.application.global.exception.EntityNotFoundException;
 import com.qring.reservation.application.global.exception.UnauthorizedAccessException;
@@ -7,12 +8,15 @@ import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
 import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
+import com.qring.reservation.application.v1.res.RestaurantGetByIdResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
+import com.qring.reservation.infrastructure.client.RestaurantClient;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,9 +31,14 @@ public class ReservationServiceV1 {
 
     private final ReservationRepository reservationRepository;
     private final KafkaMessageProducerV1 kafkaMessageProducerV1;
+    private final RestaurantClient restaurantClient;
 
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
+        // 영업상태 확인
+        if (!isRestaurantOpen(dto.getReservation().getRestaurantId())) {
+            throw new BadRequestException("현재 영업 중이 아닙니다.");
+        }
 
         ReservationEntity reservationEntityForSave = ReservationEntity.createReservationEntity(
                 PassportUtil.getUserId(passport),
@@ -160,6 +169,16 @@ public class ReservationServiceV1 {
                 break;
             default:
                 throw new BadRequestException("유효하지 않은 역할입니다: " + role);
+        }
+    }
+
+    public boolean isRestaurantOpen(Long restaurantId) {
+        try {
+            return "영업중".equals(restaurantClient.getBy(restaurantId).getData().getRestaurant().getOperationStatus());
+        } catch (FeignException.NotFound e) {
+            throw new EntityNotFoundException("존재하지 않는 식당입니다.");
+        } catch (FeignException e) {
+            throw new IllegalStateException("식당 서비스 호출 중 문제가 발생했습니다.", e);
         }
     }
 
