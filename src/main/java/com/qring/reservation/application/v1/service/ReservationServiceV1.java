@@ -161,6 +161,18 @@ public class ReservationServiceV1 {
         reservationEntityForDelete.deleteReservationEntity(PassportUtil.getUsername(passport));
     }
 
+    @Transactional(readOnly = true)
+    public ReservationGetByIdResDTOV1.ReservationInfo getByReview(Long id) {
+
+        ReservationEntity reservationEntityForMapping = getReservationEntityById(id);
+
+        return ReservationGetByIdResDTOV1.ReservationInfo.from(
+                reservationEntityForMapping.getUserId(),
+                reservationEntityForMapping.getRestaurantId(),
+                reservationEntityForMapping.getStatus().getStatus()
+        );
+    }
+
     private void validateAccess(String passport, Long userId, Long restaurantId) {
 
         String role = PassportUtil.getRole(passport);

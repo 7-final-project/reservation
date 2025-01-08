@@ -135,4 +135,17 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
                 HttpStatus.OK
         );
     }
+
+    @GetMapping("/{id}/review")
+    public ResponseEntity<ResDTO<ReservationGetByIdResDTOV1.ReservationInfo>> getByReview(@PathVariable Long id) {
+
+        return new ResponseEntity<>(
+                ResDTO.<ReservationGetByIdResDTOV1.ReservationInfo>builder()
+                        .code(HttpStatus.OK.value())
+                        .message("예약 정보 조회에 성공했습니다.")
+                        .data(reservationServiceV1.getByReview(id))
+                        .build(),
+                HttpStatus.OK
+        );
+    }
 }
