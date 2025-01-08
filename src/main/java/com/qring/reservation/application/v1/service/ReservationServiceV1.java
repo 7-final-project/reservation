@@ -4,10 +4,7 @@ import com.qring.reservation.application.global.exception.BadRequestException;
 import com.qring.reservation.application.global.exception.EntityNotFoundException;
 import com.qring.reservation.application.global.exception.UnauthorizedAccessException;
 import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
-import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
-import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
-import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
-import com.qring.reservation.application.v1.res.RestaurantGetByIdResDTOV1;
+import com.qring.reservation.application.v1.res.*;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
@@ -128,9 +125,8 @@ public class ReservationServiceV1 {
 
         validateUserRole(PassportUtil.getRole(passport), "점주");
 
-        // 점주의 소유 식당 목록 - 구현 예정
-        Long userIdOfOwner = PassportUtil.getUserId(passport);
-        List<Long> restaurantIdListOfOwner = Arrays.asList(1L, 6L);
+        // 점주의 소유 식당 목록
+        List<Long> restaurantIdListOfOwner = getRestaurantIdListByUserId(passport);
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(
                 pageable,
@@ -219,18 +215,19 @@ public class ReservationServiceV1 {
     private void validateAccess(String passport, Long userId, Long restaurantId) {
 
         String role = PassportUtil.getRole(passport);
-        Long userIdOfPassport = PassportUtil.getUserId(passport);
-        List<Long> restaurantIdListOfOwner = Arrays.asList(1L, 6L); // 점주의 소유 식당 목록
 
         switch (role) {
             case "관리자":
                 break;
             case "고객":
-                if (!Objects.equals(userIdOfPassport, userId)) {
+                if (!Objects.equals(PassportUtil.getUserId(passport), userId)) {
                     throw new UnauthorizedAccessException("자신의 예약만 접근할 수 있습니다.");
                 }
                 break;
             case "점주":
+                // 점주의 소유 식당 목록
+                List<Long> restaurantIdListOfOwner = getRestaurantIdListByUserId(passport);
+
                 if (!restaurantIdListOfOwner.contains(restaurantId)) {
                     throw new UnauthorizedAccessException("자신의 식당 예약만 접근할 수 있습니다.");
                 }
@@ -242,12 +239,20 @@ public class ReservationServiceV1 {
 
     private RestaurantGetByIdResDTOV1 getRestaurantData(Long restaurantId) {
         try {
-            return restaurantClient.getBy(restaurantId).getData();
+            return restaurantClient.getBy(restaurantId).getBody().getData();
         } catch (FeignException.NotFound e) {
             throw new EntityNotFoundException("존재하지 않는 식당입니다.");
         } catch (FeignException e) {
             throw new IllegalStateException("식당 서비스 호출 중 문제가 발생했습니다.", e);
         }
+    }
+
+    private List<Long> getRestaurantIdListByUserId(String passport) {
+        return restaurantClient
+                .getRestaurantTableByUserId(PassportUtil.getUserId(passport)) // Restaurant 서비스 호출
+                .getBody()
+                .getData()
+                .getRestaurantList(); // 식당 ID 리스트 반환
     }
 
     private ReservationEntity getReservationEntityById(Long id) {
