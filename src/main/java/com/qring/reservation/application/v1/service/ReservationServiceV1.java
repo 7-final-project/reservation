@@ -11,6 +11,7 @@ import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
+import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTO;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
@@ -173,6 +174,14 @@ public class ReservationServiceV1 {
         );
     }
 
+    public void sendUserSlackEmailByEvent(QueueAlarmEventDTO event) {
+        Long userId = getReservationEntityById(event.getId()).getUserId();
+        // userId로 slackEmail 조회 - 구현 예정
+        String slackEmail = "oky07031217@gmail.com";
+
+        kafkaMessageProducerV1.publishUserSlackEmailSendEvent(slackEmail);
+    }
+
     private void validateAccess(String passport, Long userId, Long restaurantId) {
 
         String role = PassportUtil.getRole(passport);
@@ -197,7 +206,7 @@ public class ReservationServiceV1 {
         }
     }
 
-    public boolean isRestaurantOpen(Long restaurantId) {
+    private boolean isRestaurantOpen(Long restaurantId) {
         try {
             return "영업중".equals(restaurantClient.getBy(restaurantId).getData().getRestaurant().getOperationStatus());
         } catch (FeignException.NotFound e) {
