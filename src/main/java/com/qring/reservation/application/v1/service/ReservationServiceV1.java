@@ -33,6 +33,7 @@ public class ReservationServiceV1 {
 
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
+
         // 영업상태 확인
         if (!isRestaurantOpen(dto.getReservation().getRestaurantId())) {
             throw new BadRequestException("현재 영업 중이 아닙니다.");
