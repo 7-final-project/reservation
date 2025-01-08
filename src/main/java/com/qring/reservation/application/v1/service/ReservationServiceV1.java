@@ -165,12 +165,23 @@ public class ReservationServiceV1 {
     @Transactional(readOnly = true)
     public ReservationGetByIdResDTOV1.ReservationInfo getByReview(Long id) {
 
-        ReservationEntity reservationEntityForMapping = getReservationEntityById(id);
+        ReservationEntity reservationEntityForMapping = reservationRepository.findByIdAndDeletedAtIsNull(id).orElse(null);
+
+        if (reservationEntityForMapping == null) {
+            // 예약이 존재하지 않을 경우
+            return ReservationGetByIdResDTOV1.ReservationInfo.from(
+                    null,
+                    null,
+                    "미방문"
+            );
+        }
+
+        String status = reservationEntityForMapping.getStatus() == ReservationStatus.SEATED ? "방문" : "미방문";
 
         return ReservationGetByIdResDTOV1.ReservationInfo.from(
                 reservationEntityForMapping.getUserId(),
                 reservationEntityForMapping.getRestaurantId(),
-                reservationEntityForMapping.getStatus().getStatus()
+                status
         );
     }
 
