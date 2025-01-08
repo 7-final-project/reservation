@@ -16,7 +16,6 @@ import java.util.List;
 public class RestaurantGetByIdResDTOV1 {
 
     private Restaurant restaurant;
-    private RestaurantInfo restaurantInfo;
 
     @Getter
     @Builder
@@ -46,25 +45,6 @@ public class RestaurantGetByIdResDTOV1 {
             private String dayOfWeek;
             private LocalTime openAt;
             private LocalTime closedAt;
-        }
-    }
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class RestaurantInfo {
-
-        private Long restaurantId;
-        private String restaurantName;
-        private String restaurantTel;
-
-        public static RestaurantGetByIdResDTOV1.RestaurantInfo from(Long restaurantId, String restaurantName, String restaurantTel) {
-            return RestaurantGetByIdResDTOV1.RestaurantInfo.builder()
-                    .restaurantId(restaurantId)
-                    .restaurantName(restaurantName)
-                    .restaurantTel(restaurantTel)
-                    .build();
         }
     }
 }

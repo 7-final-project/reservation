@@ -2,7 +2,7 @@ package com.qring.reservation.infrastructure.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qring.reservation.application.v1.service.ReservationServiceV1;
-import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTO;
+import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -19,7 +19,7 @@ public class KafkaMessageConsumerV1 {
     @KafkaListener(topics = "queue-alarm-event-topic", groupId = "${spring.kafka.consumer.group-id}")
     public void extractId(String message) {
         try {
-            QueueAlarmEventDTO event = parseMessage(message);
+            QueueAlarmEventDTOV1 event = parseMessage(message);
             log.info("Parsed event: {}", event);
             reservationServiceV1.sendUserSlackEmailByEvent(event);
         } catch (Exception e) {
@@ -27,10 +27,10 @@ public class KafkaMessageConsumerV1 {
         }
     }
 
-    private QueueAlarmEventDTO parseMessage(String message) {
+    private QueueAlarmEventDTOV1 parseMessage(String message) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(message, QueueAlarmEventDTO.class);
+            return objectMapper.readValue(message, QueueAlarmEventDTOV1.class);
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid message format: " + message, e);
         }

@@ -7,11 +7,13 @@ import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
 import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
+import com.qring.reservation.application.v1.res.RestaurantGetByIdResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
-import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTO;
+import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.ReservationCreateEventDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
@@ -35,8 +37,10 @@ public class ReservationServiceV1 {
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
 
+        RestaurantGetByIdResDTOV1 restaurant = getRestaurantData(dto.getReservation().getRestaurantId());
+
         // 영업상태 확인
-        if (!isRestaurantOpen(dto.getReservation().getRestaurantId())) {
+        if (!"영업중".equals(restaurant.getRestaurant().getOperationStatus())) {
             throw new BadRequestException("현재 영업 중이 아닙니다.");
         }
 
@@ -48,12 +52,30 @@ public class ReservationServiceV1 {
 
         reservationRepository.save(reservationEntityForSave);
 
-        ReservationPostResDTOV1.ReservationInfo reservationInfo = ReservationPostResDTOV1.ReservationInfo.from(
-                reservationEntityForSave.getId(),
-                reservationEntityForSave.getRestaurantId()
+        ReservationCreateEventDTOV1.UserInfo userInfo = ReservationCreateEventDTOV1.UserInfo.from(
+                reservationEntityForSave.getUserId(),
+                PassportUtil.getSlackEmail(passport)
         );
 
-        kafkaMessageProducerV1.publishReservationCreateEvent(reservationInfo);
+        ReservationCreateEventDTOV1.RestaurantInfo restaurantInfo = ReservationCreateEventDTOV1.RestaurantInfo.from(
+                restaurant.getRestaurant().getName(),
+                restaurant.getRestaurant().getTel()
+        );
+
+        ReservationCreateEventDTOV1.ReservationInfo reservationInfo = ReservationCreateEventDTOV1.ReservationInfo.from(
+                reservationEntityForSave.getId(),
+                reservationEntityForSave.getRestaurantId(),
+                reservationEntityForSave.getHeadCount()
+
+        );
+
+        ReservationCreateEventDTOV1.Message message = ReservationCreateEventDTOV1.Message.from(
+                userInfo,
+                restaurantInfo,
+                reservationInfo
+        );
+
+        kafkaMessageProducerV1.publishReservationCreateEvent(message);
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
     }
@@ -135,9 +157,10 @@ public class ReservationServiceV1 {
             throw new BadRequestException("이미 입장한 예약입니다.");
         }
 
-        ReservationPostResDTOV1.ReservationInfo reservationInfo = ReservationPostResDTOV1.ReservationInfo.from(
+        ReservationCreateEventDTOV1.ReservationInfo reservationInfo = ReservationCreateEventDTOV1.ReservationInfo.from(
                 reservationEntityForModify.getId(),
-                reservationEntityForModify.getRestaurantId()
+                reservationEntityForModify.getRestaurantId(),
+                reservationEntityForModify.getHeadCount()
         );
 
         kafkaMessageProducerV1.publishReservationUpdateEvent(reservationInfo);
@@ -185,7 +208,7 @@ public class ReservationServiceV1 {
         );
     }
 
-    public void sendUserSlackEmailByEvent(QueueAlarmEventDTO event) {
+    public void sendUserSlackEmailByEvent(QueueAlarmEventDTOV1 event) {
         Long userId = getReservationEntityById(event.getId()).getUserId();
         // userId로 slackEmail 조회 - 구현 예정
         String slackEmail = "oky07031217@gmail.com";
@@ -217,9 +240,9 @@ public class ReservationServiceV1 {
         }
     }
 
-    private boolean isRestaurantOpen(Long restaurantId) {
+    private RestaurantGetByIdResDTOV1 getRestaurantData(Long restaurantId) {
         try {
-            return "영업중".equals(restaurantClient.getBy(restaurantId).getData().getRestaurant().getOperationStatus());
+            return restaurantClient.getBy(restaurantId).getData();
         } catch (FeignException.NotFound e) {
             throw new EntityNotFoundException("존재하지 않는 식당입니다.");
         } catch (FeignException e) {

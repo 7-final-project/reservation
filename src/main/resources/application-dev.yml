@@ -37,9 +37,8 @@ service:
 
 eureka:
   client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:19000/eureka/
 
 server:
   port: 19040

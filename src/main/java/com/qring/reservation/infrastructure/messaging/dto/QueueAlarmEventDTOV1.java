@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class QueueAlarmEventDTO {
+public class QueueAlarmEventDTOV1 {
     @JsonProperty("reservationId")
     private Long id;
 }
