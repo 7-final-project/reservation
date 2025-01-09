@@ -8,6 +8,6 @@ public interface KafkaMessageProducerV1 {
 
     void publishReservationUpdateEvent(ReservationCreateEventDTOV1.Reservation reservation);
 
-    void publishUserSlackEmailSendEvent(String slackEmail);
+    void publishUserInfoSendEvent(ReservationCreateEventDTOV1.User user);
 
 }

@@ -191,12 +191,17 @@ public class ReservationServiceV1 {
         reservationEntityForDelete.deleteReservationEntity(PassportUtil.getUsername(passport));
     }
 
-    public void sendUserSlackEmailByEvent(QueueAlarmEventDTOV1 event) {
+    public void sendUserInfoByEvent(QueueAlarmEventDTOV1 event) {
+        // userId로 유저정보 조회 - 구현 예정
         Long userId = getReservationEntityById(event.getId()).getUserId();
-        // userId로 slackEmail 조회 - 구현 예정
-        String slackEmail = "oky07031217@gmail.com";
 
-        kafkaMessageProducerV1.publishUserSlackEmailSendEvent(slackEmail);
+        ReservationCreateEventDTOV1.User user = ReservationCreateEventDTOV1.User.from(
+                userId,
+                "oky07031217@gmail.com",
+                "username"
+        );
+
+        kafkaMessageProducerV1.publishUserInfoSendEvent(user);
     }
 
     private void validateAccess(String passport, Long userId, Long restaurantId) {

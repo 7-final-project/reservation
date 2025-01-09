@@ -22,8 +22,8 @@ public class KafkaMessageProducerImplV1 implements KafkaMessageProducerV1 {
         kafkaTemplate.send("reservation-update-event-topic", reservation);
     }
 
-    public void publishUserSlackEmailSendEvent(String slackEmail) {
+    public void publishUserInfoSendEvent(ReservationCreateEventDTOV1.User user) {
 
-        kafkaTemplate.send("userslackemail-send-event-topic", slackEmail);
+        kafkaTemplate.send("userinfo-send-event-topic", user);
     }
 }

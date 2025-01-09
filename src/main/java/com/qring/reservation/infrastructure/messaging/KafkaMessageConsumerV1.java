@@ -21,7 +21,7 @@ public class KafkaMessageConsumerV1 {
         try {
             QueueAlarmEventDTOV1 event = parseMessage(message);
             log.info("Parsed event: {}", event);
-            reservationServiceV1.sendUserSlackEmailByEvent(event);
+            reservationServiceV1.sendUserInfoByEvent(event);
         } catch (Exception e) {
             log.error("메시지 추출 실패 : {}", message, e);
         }
