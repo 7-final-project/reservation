@@ -183,7 +183,7 @@ public class ReservationServiceV1 {
     }
 
     @Transactional(readOnly = true)
-    public ReservationGetByIdResDTOV1.ReservationInfo getByReview(Long id) {
+    public ReservationGetByIdResDTOV1.ReservationInfo getBy(Long id) {
 
         ReservationEntity reservationEntityForMapping = reservationRepository.findByIdAndDeletedAtIsNull(id).orElse(null);
 
@@ -250,7 +250,7 @@ public class ReservationServiceV1 {
 
     private List<Long> getRestaurantIdListByUserId(String passport) {
         return restaurantClient
-                .getRestaurantTableByUserId(PassportUtil.getUserId(passport)) // Restaurant 서비스 호출
+                .getRestaurantTableByUserId(passport) // Restaurant 서비스 호출
                 .getBody()
                 .getData()
                 .getRestaurantList(); // 식당 ID 리스트 반환

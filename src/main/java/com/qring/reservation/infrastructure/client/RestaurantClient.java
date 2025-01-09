@@ -14,7 +14,7 @@ public interface RestaurantClient {
     @GetMapping("/v1/restaurants/{id}")
     ResponseEntity<ResDTO<RestaurantGetByIdResDTOV1>> getBy(@PathVariable(name = "id") Long id);
 
-    @GetMapping("/v1/restaurants/user/{userId}/table")
-    ResponseEntity<ResDTO<RestaurantIdTableResDTOV1>> getRestaurantTableByUserId(@PathVariable Long userId);
+    @GetMapping("/v1/restaurants/my")
+    ResponseEntity<ResDTO<RestaurantIdTableResDTOV1>> getRestaurantTableByUserId(String passport);
 
 }
