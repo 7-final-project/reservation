@@ -44,6 +44,7 @@ public class ReservationServiceV1 {
         ReservationEntity reservationEntityForSave = ReservationEntity.createReservationEntity(
                 PassportUtil.getUserId(passport),
                 dto.getReservation().getRestaurantId(),
+                dto.getReservation().getUserCouponId(),
                 dto.getReservation().getHeadCount()
         );
 
@@ -56,8 +57,8 @@ public class ReservationServiceV1 {
         );
 
         ReservationCreateEventDTOV1.RestaurantInfo restaurantInfo = ReservationCreateEventDTOV1.RestaurantInfo.from(
-                "삼고집 파주점",
-                " 031-8071-3350"
+                restaurant.getRestaurant().getName(),
+                restaurant.getRestaurant().getTel()
         );
 
         ReservationCreateEventDTOV1.ReservationInfo reservationInfo = ReservationCreateEventDTOV1.ReservationInfo.from(
