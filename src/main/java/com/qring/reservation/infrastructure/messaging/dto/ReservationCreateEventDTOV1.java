@@ -43,11 +43,14 @@ public class ReservationCreateEventDTOV1 {
 
         private Long userId;
         private String slackEmail;
+        private String username;
 
-        public static UserInfo from(Long userId, String slackEmail) {
+
+        public static UserInfo from(Long userId, String slackEmail, String username) {
             return UserInfo.builder()
                     .userId(userId)
                     .slackEmail(slackEmail)
+                    .username(username)
                     .build();
         }
     }

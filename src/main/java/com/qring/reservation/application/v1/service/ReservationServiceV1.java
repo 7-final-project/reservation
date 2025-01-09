@@ -51,12 +51,13 @@ public class ReservationServiceV1 {
 
         ReservationCreateEventDTOV1.UserInfo userInfo = ReservationCreateEventDTOV1.UserInfo.from(
                 reservationEntityForSave.getUserId(),
-                PassportUtil.getSlackEmail(passport)
+                PassportUtil.getSlackEmail(passport),
+                PassportUtil.getUsername(passport)
         );
 
         ReservationCreateEventDTOV1.RestaurantInfo restaurantInfo = ReservationCreateEventDTOV1.RestaurantInfo.from(
-                restaurant.getRestaurant().getName(),
-                restaurant.getRestaurant().getTel()
+                "삼고집 파주점",
+                " 031-8071-3350"
         );
 
         ReservationCreateEventDTOV1.ReservationInfo reservationInfo = ReservationCreateEventDTOV1.ReservationInfo.from(
