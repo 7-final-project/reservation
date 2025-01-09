@@ -8,6 +8,7 @@ import com.qring.reservation.application.v1.res.*;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
+import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationCreateEventDTOV1;
@@ -30,6 +31,7 @@ public class ReservationServiceV1 {
     private final ReservationRepository reservationRepository;
     private final KafkaMessageProducerV1 kafkaMessageProducerV1;
     private final RestaurantClient restaurantClient;
+    private final CouponClient couponClient;
 
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
@@ -39,6 +41,12 @@ public class ReservationServiceV1 {
         // 영업상태 확인
         if (!"영업중".equals(restaurant.getRestaurant().getOperationStatus())) {
             throw new BadRequestException("현재 영업 중이 아닙니다.");
+        }
+
+        Long userCouponId = dto.getReservation().getUserCouponId();
+
+        if (userCouponId != null) {
+            isExistsUserCoupon(passport, userCouponId);
         }
 
         ReservationEntity reservationEntityForSave = ReservationEntity.createReservationEntity(
@@ -246,6 +254,26 @@ public class ReservationServiceV1 {
             throw new EntityNotFoundException("존재하지 않는 식당입니다.");
         } catch (FeignException e) {
             throw new IllegalStateException("식당 서비스 호출 중 문제가 발생했습니다.", e);
+        }
+    }
+
+    public boolean isExistsUserCoupon(String passport, Long couponId) {
+        try {
+            // Coupon 서비스 호출
+            Set<CouponTableGetByUserIdResDTOV1.UserCoupon> userCouponSet = couponClient
+                    .getBy(passport)
+                    .getBody()
+                    .getData()
+                    .getUserCouponSet();
+
+            // 특정 couponId가 있는지 확인
+            return userCouponSet.stream()
+                    .map(CouponTableGetByUserIdResDTOV1.UserCoupon::getCoupon) // Coupon 객체 추출
+                    .anyMatch(coupon -> coupon.getId().equals(couponId)); // couponId와 일치하는지 확인
+        } catch (FeignException.NotFound e) {
+            throw new EntityNotFoundException("존재하지 않는 쿠폰입니다.");
+        } catch (FeignException e) {
+            throw new IllegalStateException("쿠폰 서비스 호출 중 문제가 발생했습니다.");
         }
     }
 
