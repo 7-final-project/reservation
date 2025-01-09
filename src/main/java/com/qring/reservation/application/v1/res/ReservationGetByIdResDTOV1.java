@@ -31,6 +31,7 @@ public class ReservationGetByIdResDTOV1 {
         private Long id;
         private Long userId;
         private Long restaurantId;
+        private Long userCouponId;
         private ReservationStatus status;
         private int headCount;
 
@@ -39,6 +40,7 @@ public class ReservationGetByIdResDTOV1 {
                     .id(reservationEntity.getId())
                     .userId(reservationEntity.getUserId())
                     .restaurantId(reservationEntity.getRestaurantId())
+                    .userCouponId(reservationEntity.getUserCouponId())
                     .status(reservationEntity.getStatus())
                     .headCount(reservationEntity.getHeadCount())
                     .build();

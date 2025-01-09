@@ -6,7 +6,7 @@ public interface KafkaMessageProducerV1 {
 
     void publishReservationCreateEvent(ReservationCreateEventDTOV1.Message message);
 
-    void publishReservationUpdateEvent(ReservationCreateEventDTOV1.ReservationInfo reservationInfo);
+    void publishReservationUpdateEvent(ReservationCreateEventDTOV1.Reservation reservation);
 
     void publishUserSlackEmailSendEvent(String slackEmail);
 

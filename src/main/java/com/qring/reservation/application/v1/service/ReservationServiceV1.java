@@ -58,18 +58,18 @@ public class ReservationServiceV1 {
 
         reservationRepository.save(reservationEntityForSave);
 
-        ReservationCreateEventDTOV1.UserInfo userInfo = ReservationCreateEventDTOV1.UserInfo.from(
+        ReservationCreateEventDTOV1.User user = ReservationCreateEventDTOV1.User.from(
                 reservationEntityForSave.getUserId(),
                 PassportUtil.getSlackEmail(passport),
                 PassportUtil.getUsername(passport)
         );
 
-        ReservationCreateEventDTOV1.RestaurantInfo restaurantInfo = ReservationCreateEventDTOV1.RestaurantInfo.from(
+        ReservationCreateEventDTOV1.Restaurant reservationRestaurant = ReservationCreateEventDTOV1.Restaurant.from(
                 restaurant.getRestaurant().getName(),
                 restaurant.getRestaurant().getTel()
         );
 
-        ReservationCreateEventDTOV1.ReservationInfo reservationInfo = ReservationCreateEventDTOV1.ReservationInfo.from(
+        ReservationCreateEventDTOV1.Reservation reservation = ReservationCreateEventDTOV1.Reservation.from(
                 reservationEntityForSave.getId(),
                 reservationEntityForSave.getRestaurantId(),
                 reservationEntityForSave.getHeadCount()
@@ -77,9 +77,9 @@ public class ReservationServiceV1 {
         );
 
         ReservationCreateEventDTOV1.Message message = ReservationCreateEventDTOV1.Message.from(
-                userInfo,
-                restaurantInfo,
-                reservationInfo
+                user,
+                reservationRestaurant,
+                reservation
         );
 
         kafkaMessageProducerV1.publishReservationCreateEvent(message);
@@ -163,13 +163,13 @@ public class ReservationServiceV1 {
             throw new BadRequestException("이미 입장한 예약입니다.");
         }
 
-        ReservationCreateEventDTOV1.ReservationInfo reservationInfo = ReservationCreateEventDTOV1.ReservationInfo.from(
+        ReservationCreateEventDTOV1.Reservation reservation = ReservationCreateEventDTOV1.Reservation.from(
                 reservationEntityForModify.getId(),
                 reservationEntityForModify.getRestaurantId(),
                 reservationEntityForModify.getHeadCount()
         );
 
-        kafkaMessageProducerV1.publishReservationUpdateEvent(reservationInfo);
+        kafkaMessageProducerV1.publishReservationUpdateEvent(reservation);
 
         reservationEntityForModify.updateReservationEntityStatus(dto.getReservation().getStatus());
     }
