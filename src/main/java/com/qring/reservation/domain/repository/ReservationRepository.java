@@ -1,6 +1,7 @@
 package com.qring.reservation.domain.repository;
 
 import com.qring.reservation.domain.model.ReservationEntity;
+import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,4 +18,5 @@ public interface ReservationRepository {
 
     Page<ReservationEntity> findReservationPageByDeletedAtIsNullWithOwnerConditions(Pageable pageable, List<Long> restaurantIdListOfOwner, Long userId, Long restaurantId, Long id, String sort);
 
+    boolean existsByUserIdAndRestaurantIdAndStatus(Long userId, Long restaurantId, ReservationStatus status);
 }

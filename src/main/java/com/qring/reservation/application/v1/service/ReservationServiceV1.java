@@ -12,6 +12,7 @@ import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationCreateEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.ReservationUpdateEventDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
@@ -163,10 +164,9 @@ public class ReservationServiceV1 {
             throw new BadRequestException("이미 입장한 예약입니다.");
         }
 
-        ReservationCreateEventDTOV1.Reservation reservation = ReservationCreateEventDTOV1.Reservation.from(
+        ReservationUpdateEventDTOV1.Reservation reservation = ReservationUpdateEventDTOV1.Reservation.from(
                 reservationEntityForModify.getId(),
-                reservationEntityForModify.getRestaurantId(),
-                reservationEntityForModify.getHeadCount()
+                reservationEntityForModify.getRestaurantId()
         );
 
         kafkaMessageProducerV1.publishReservationUpdateEvent(reservation);

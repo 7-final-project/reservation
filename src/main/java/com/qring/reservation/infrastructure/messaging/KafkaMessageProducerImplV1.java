@@ -2,6 +2,7 @@ package com.qring.reservation.infrastructure.messaging;
 
 import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationCreateEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.ReservationUpdateEventDTOV1;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ public class KafkaMessageProducerImplV1 implements KafkaMessageProducerV1 {
         kafkaTemplate.send("reservation-create-event-topic", message);
     }
 
-    public void publishReservationUpdateEvent(ReservationCreateEventDTOV1.Reservation reservation) {
+    public void publishReservationUpdateEvent(ReservationUpdateEventDTOV1.Reservation reservation) {
 
         kafkaTemplate.send("reservation-update-event-topic", reservation);
     }

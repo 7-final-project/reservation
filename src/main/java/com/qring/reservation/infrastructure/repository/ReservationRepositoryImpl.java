@@ -3,6 +3,7 @@ package com.qring.reservation.infrastructure.repository;
 import com.qring.reservation.application.global.exception.BadRequestException;
 import com.qring.reservation.domain.model.QReservationEntity;
 import com.qring.reservation.domain.model.ReservationEntity;
+import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -30,6 +31,10 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 
     public Optional<ReservationEntity> findByIdAndDeletedAtIsNull(Long id) {
         return jpaReservationRepository.findByIdAndDeletedAtIsNull(id);
+    }
+
+    public boolean existsByUserIdAndRestaurantIdAndStatus(Long userId, Long restaurantId, ReservationStatus status) {
+        return jpaReservationRepository.existsByUserIdAndRestaurantIdAndStatus(userId, restaurantId, status);
     }
 
     // QueryDSL 동적 쿼리
