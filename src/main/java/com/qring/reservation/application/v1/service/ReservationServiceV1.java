@@ -47,15 +47,15 @@ public class ReservationServiceV1 {
         }
 
         // 중복 예약 확인
-//        boolean isExistsReservation = reservationRepository.existsByUserIdAndRestaurantIdAndStatus(
-//                PassportUtil.getUserId(passport),
-//                restaurant.getRestaurant().getRestaurantId(),
-//                ReservationStatus.WAITING
-//        );
-//
-//        if (isExistsReservation) {
-//            throw new BadRequestException("이미 해당 매장에서 대기 중인 예약이 있습니다.");
-//        }
+        boolean isExistsReservation = reservationRepository.existsByUserIdAndRestaurantIdAndStatus(
+                PassportUtil.getUserId(passport),
+                restaurant.getRestaurant().getRestaurantId(),
+                ReservationStatus.WAITING
+        );
+
+        if (isExistsReservation) {
+            throw new BadRequestException("이미 해당 매장에서 대기 중인 예약이 있습니다.");
+        }
 
         Long userCouponId = dto.getReservation().getUserCouponId();
 
