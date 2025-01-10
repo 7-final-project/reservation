@@ -8,6 +8,7 @@ import com.qring.reservation.application.v1.res.*;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
+import com.qring.reservation.infrastructure.client.AuthClient;
 import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
@@ -33,6 +34,7 @@ public class ReservationServiceV1 {
     private final KafkaMessageProducerV1 kafkaMessageProducerV1;
     private final RestaurantClient restaurantClient;
     private final CouponClient couponClient;
+    private final AuthClient authClient;
 
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
@@ -45,15 +47,15 @@ public class ReservationServiceV1 {
         }
 
         // 중복 예약 확인
-        boolean isExistsReservation = reservationRepository.existsByUserIdAndRestaurantIdAndStatus(
-                PassportUtil.getUserId(passport),
-                restaurant.getRestaurant().getRestaurantId(),
-                ReservationStatus.WAITING
-        );
-
-        if (isExistsReservation) {
-            throw new BadRequestException("이미 해당 매장에서 대기 중인 예약이 있습니다.");
-        }
+//        boolean isExistsReservation = reservationRepository.existsByUserIdAndRestaurantIdAndStatus(
+//                PassportUtil.getUserId(passport),
+//                restaurant.getRestaurant().getRestaurantId(),
+//                ReservationStatus.WAITING
+//        );
+//
+//        if (isExistsReservation) {
+//            throw new BadRequestException("이미 해당 매장에서 대기 중인 예약이 있습니다.");
+//        }
 
         Long userCouponId = dto.getReservation().getUserCouponId();
 
@@ -203,16 +205,19 @@ public class ReservationServiceV1 {
     }
 
     public void sendUserInfoByEvent(QueueAlarmEventDTOV1 event) {
-        // userId로 유저정보 조회 - 구현 예정
-        Long userId = getReservationEntityById(event.getId()).getUserId();
 
-        ReservationCreateEventDTOV1.User user = ReservationCreateEventDTOV1.User.from(
-                userId,
-                "oky07031217@gmail.com",
-                "username"
+        // 유저 정보 조회
+        UserGetByIdResDTOV1.User user = getUserData(getReservationEntityById(event.getId()).getUserId()).getUser();
+
+        // 유저 정보 생성
+        ReservationCreateEventDTOV1.User reservationUser = ReservationCreateEventDTOV1.User.from(
+                user.getUserId(),
+                user.getSlackEmail(),
+                user.getUsername()
         );
 
-        kafkaMessageProducerV1.publishUserInfoSendEvent(user);
+        // Kafka 메시지 발행
+        kafkaMessageProducerV1.publishUserInfoSendEvent(reservationUser);
     }
 
     private void validateAccess(String passport, Long userId, Long restaurantId) {
@@ -237,6 +242,16 @@ public class ReservationServiceV1 {
                 break;
             default:
                 throw new BadRequestException("유효하지 않은 역할입니다: " + role);
+        }
+    }
+
+    private UserGetByIdResDTOV1 getUserData(Long userId) {
+        try {
+            return authClient.getBy(userId).getBody().getData();
+        } catch (FeignException.NotFound e) {
+            throw new EntityNotFoundException("존재하지 않는 사용자입니다.");
+        } catch (FeignException e) {
+            throw new IllegalStateException("유저 서비스 호출 중 문제가 발생했습니다.", e);
         }
     }
 
