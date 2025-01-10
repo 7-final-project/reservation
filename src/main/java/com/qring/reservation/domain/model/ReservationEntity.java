@@ -33,6 +33,9 @@ public class ReservationEntity {
     @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;
 
+    @Column(name = "user_coupon_id")
+    private Long userCouponId;
+
     @Column(name = "status", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private ReservationStatus status;
@@ -63,18 +66,20 @@ public class ReservationEntity {
     private String deletedBy;
 
     @Builder
-    public ReservationEntity(Long userId, Long restaurantId, ReservationStatus status, int headCount) {
+    public ReservationEntity(Long userId, Long restaurantId, Long userCouponId, ReservationStatus status, int headCount) {
         this.userId = userId;
         this.restaurantId = restaurantId;
+        this.userCouponId = userCouponId;
         this.status = status;
         this.headCount = headCount;
     }
 
-    public static ReservationEntity createReservationEntity(Long userId, Long restaurantId, int headCount) {
+    public static ReservationEntity createReservationEntity(Long userId, Long restaurantId, Long userCouponId, int headCount) {
         return ReservationEntity.builder()
                 .userId(userId)
                 .restaurantId(restaurantId)
-                .status(ReservationStatus.CONFIRMED)
+                .userCouponId(userCouponId)
+                .status(ReservationStatus.WAITING)
                 .headCount(headCount)
                 .build();
     }
