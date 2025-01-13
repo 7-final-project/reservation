@@ -20,8 +20,7 @@ public class UserGetByIdResDTOV1 {
     @AllArgsConstructor
     public static class User {
 
-        @JsonProperty("id")
-        private Long userId;
+        private Long id;
         private String username;
         private String phone;
         private String slackEmail;
