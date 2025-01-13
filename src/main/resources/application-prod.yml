@@ -1,7 +1,7 @@
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:19000/eureka/
+      efaultZone: http://q-ring:19000/eureka/
 
 server:
   port: 19040
