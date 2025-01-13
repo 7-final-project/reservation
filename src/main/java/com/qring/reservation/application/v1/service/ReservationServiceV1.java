@@ -8,10 +8,12 @@ import com.qring.reservation.application.v1.res.*;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
+import com.qring.reservation.infrastructure.client.AuthClient;
 import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationCreateEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.ReservationSendUserInfoEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationUpdateEventDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
@@ -33,6 +35,7 @@ public class ReservationServiceV1 {
     private final KafkaMessageProducerV1 kafkaMessageProducerV1;
     private final RestaurantClient restaurantClient;
     private final CouponClient couponClient;
+    private final AuthClient authClient;
 
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
@@ -203,16 +206,19 @@ public class ReservationServiceV1 {
     }
 
     public void sendUserInfoByEvent(QueueAlarmEventDTOV1 event) {
-        // userId로 유저정보 조회 - 구현 예정
-        Long userId = getReservationEntityById(event.getId()).getUserId();
 
-        ReservationCreateEventDTOV1.User user = ReservationCreateEventDTOV1.User.from(
-                userId,
-                "oky07031217@gmail.com",
-                "username"
+        // 유저 정보 조회
+        UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(event.getId()).getBody()).getData();
+
+        // 유저 정보 생성
+        ReservationSendUserInfoEventDTOV1.User reservationUser = ReservationSendUserInfoEventDTOV1.User.from(
+                dto.getUser().getId(),
+                dto.getUser().getSlackEmail(),
+                dto.getUser().getPhone()
         );
 
-        kafkaMessageProducerV1.publishUserInfoSendEvent(user);
+        // Kafka 메시지 발행
+        kafkaMessageProducerV1.publishUserInfoSendEvent(reservationUser);
     }
 
     private void validateAccess(String passport, Long userId, Long restaurantId) {
