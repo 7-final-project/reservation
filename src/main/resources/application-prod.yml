@@ -11,13 +11,13 @@ spring:
     type: redis
   data:
     redis:
-      host: ${REDIS_DEV_HOST}
-      port: ${REDIS_DEV_PORT}
+      host: ${REDIS_PROD_HOST}
+      port: ${REDIS_PROD_PORT}
 
   datasource:
-    url: ${DB_DEV_URL}
-    username: ${DB_DEV_USER}
-    password: ${DB_DEV_PASSWORD}
+    url: ${DB_PROD_URL}
+    username: ${DB_PROD_USER}
+    password: ${DB_PROD_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
