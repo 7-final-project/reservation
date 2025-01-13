@@ -16,7 +16,7 @@ public class KafkaMessageConsumerV1 {
     private final ReservationServiceV1 reservationServiceV1;
 
     // Kafka 메시지 처리
-    @KafkaListener(topics = "queue-alarm-event-topic", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${spring.kafka.topic.queue-alarm-event}", groupId = "${spring.kafka.consumer.group-id}")
     public void extractId(String message) {
         try {
             QueueAlarmEventDTOV1 event = parseMessage(message);

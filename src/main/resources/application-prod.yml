@@ -1,10 +1,10 @@
-server:
-  port: 19040
-
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:19000/eureka/
+
+server:
+  port: 19040
 
 spring:
   cache:
@@ -31,7 +31,7 @@ spring:
     open-in-view: false
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: ${spring.application.name}-group
       auto-offset-reset: earliest
@@ -47,6 +47,3 @@ spring:
         reservation-update-event: reservation-update-event-topic
         userinfo-send-event: userinfo-send-event-topic
         queue-alarm-event: queue-alarm-event-topic
-
-  config:
-    import: classpath:application-key.yml
