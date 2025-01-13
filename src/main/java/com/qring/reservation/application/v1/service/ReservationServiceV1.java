@@ -13,6 +13,7 @@ import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationCreateEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.ReservationSendUserInfoEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationUpdateEventDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
@@ -207,13 +208,13 @@ public class ReservationServiceV1 {
     public void sendUserInfoByEvent(QueueAlarmEventDTOV1 event) {
 
         // 유저 정보 조회
-        UserGetByIdResDTOV1.User user = getUserData(getReservationEntityById(event.getId()).getUserId()).getUser();
+        UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(event.getId()).getBody()).getData();
 
         // 유저 정보 생성
-        ReservationCreateEventDTOV1.User reservationUser = ReservationCreateEventDTOV1.User.from(
-                user.getUserId(),
-                user.getSlackEmail(),
-                user.getUsername()
+        ReservationSendUserInfoEventDTOV1.User reservationUser = ReservationSendUserInfoEventDTOV1.User.from(
+                dto.getUser().getId(),
+                dto.getUser().getSlackEmail(),
+                dto.getUser().getPhone()
         );
 
         // Kafka 메시지 발행
@@ -242,16 +243,6 @@ public class ReservationServiceV1 {
                 break;
             default:
                 throw new BadRequestException("유효하지 않은 역할입니다: " + role);
-        }
-    }
-
-    private UserGetByIdResDTOV1 getUserData(Long userId) {
-        try {
-            return authClient.getBy(userId).getBody().getData();
-        } catch (FeignException.NotFound e) {
-            throw new EntityNotFoundException("존재하지 않는 사용자입니다.");
-        } catch (FeignException e) {
-            throw new IllegalStateException("유저 서비스 호출 중 문제가 발생했습니다.", e);
         }
     }
 
