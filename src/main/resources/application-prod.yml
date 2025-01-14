@@ -39,11 +39,15 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.StringDeserializer
       properties:
         spring.json.trusted.packages: '*'
-      producer:
-        key-serializer: org.apache.kafka.common.serialization.StringSerializer
-        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      topic:
-        reservation-create-event: reservation-create-event-topic
-        reservation-update-event: reservation-update-event-topic
-        userinfo-send-event: userinfo-send-event-topic
-        queue-alarm-event: queue-alarm-event-topic
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    topic:
+      reservation-create-event: reservation-create-event-topic
+      reservation-update-event: reservation-update-event-topic
+      userinfo-send-event: userinfo-send-event-topic
+      queue-alarm-event: queue-alarm-event-topic
+
+service:
+  jwt:
+    secret-key: ${JWT_SECRET_KEY}
