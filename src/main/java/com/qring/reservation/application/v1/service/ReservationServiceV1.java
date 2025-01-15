@@ -8,6 +8,7 @@ import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
 import com.qring.reservation.application.v1.res.*;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
+import com.qring.reservation.domain.model.constraint.RoleType;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.AuthClient;
 import com.qring.reservation.infrastructure.client.CouponClient;
@@ -81,11 +82,11 @@ public class ReservationServiceV1 {
     @Transactional(readOnly = true)
     public ReservationSearchResDTOV1 searchByAdmin(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
 
-        validateUserRole(PassportUtil.getRole(passport), "관리자");
+        validateUserRole(PassportUtil.getRole(passport), RoleType.ADMIN);
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
                 pageable,
-                "관리자",
+                RoleType.ADMIN,
                 userId,
                 restaurantId,
                 id,
@@ -97,11 +98,11 @@ public class ReservationServiceV1 {
     @Transactional(readOnly = true)
     public ReservationSearchResDTOV1 searchByCustomer(Pageable pageable, String passport, Long restaurantId, Long id, String sort) {
 
-        validateUserRole(PassportUtil.getRole(passport), "고객");
+        validateUserRole(PassportUtil.getRole(passport), RoleType.CUSTOMER);
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
                 pageable,
-                "고객",
+                RoleType.CUSTOMER,
                 PassportUtil.getUserId(passport),
                 restaurantId,
                 id,
@@ -114,7 +115,7 @@ public class ReservationServiceV1 {
     @Transactional(readOnly = true)
     public ReservationSearchResDTOV1 searchByOwner(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
 
-        validateUserRole(PassportUtil.getRole(passport), "점주");
+        validateUserRole(PassportUtil.getRole(passport), RoleType.OWNER);
 
         // 점주의 소유 식당 목록
         List<Long> restaurantIdListOfOwner = getRestaurantIdListByPassport(passport).getRestaurantList();
@@ -172,12 +173,12 @@ public class ReservationServiceV1 {
         String role = PassportUtil.getRole(passport);
 
         switch (role) {
-            case "관리자":
+            case RoleType.ADMIN:
                 break;
-            case "고객":
+            case RoleType.CUSTOMER:
                 validateUserReservationAccess(passport, userId);
                 break;
-            case "점주":
+            case RoleType.OWNER:
                 RestaurantIdTableResDTOV1 restaurantData = getRestaurantIdListByPassport(passport);
                 validateOwnerReservationAccess(restaurantId, restaurantData);
                 break;
