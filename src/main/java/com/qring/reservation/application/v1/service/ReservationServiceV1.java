@@ -1,6 +1,7 @@
 package com.qring.reservation.application.v1.service;
 
 import com.qring.reservation.application.global.exception.BadRequestException;
+import com.qring.reservation.application.global.exception.DuplicateResourceException;
 import com.qring.reservation.application.global.exception.EntityNotFoundException;
 import com.qring.reservation.application.global.exception.UnauthorizedAccessException;
 import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
@@ -11,14 +12,13 @@ import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.AuthClient;
 import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
+import com.qring.reservation.infrastructure.messaging.dto.CreateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.ReservationCreateEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationSendUserInfoEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationUpdateEventDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,30 +40,20 @@ public class ReservationServiceV1 {
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
 
-        RestaurantGetByIdResDTOV1 restaurant = getRestaurantData(dto.getReservation().getRestaurantId());
+        RestaurantGetByIdResDTOV1 restaurantData = getRestaurantDataByRestaurantId(dto.getReservation().getRestaurantId());
 
-        // 영업상태 확인
-        if (!"영업중".equals(restaurant.getRestaurant().getOperationStatus())) {
-            throw new BadRequestException("현재 영업 중이 아닙니다.");
+        // NOTE : 운영시간 검증
+        validateIsNotOperating(restaurantData);
+
+        // NOTE : 중복 예약 확인
+        validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getRestaurantId());
+
+        // NOTE : 쿠폰 검증
+        if (dto.getReservation().getUserCouponId() != null) {
+            validateUserCouponAccess(dto.getReservation().getUserCouponId(), passport);
         }
 
-        // 중복 예약 확인
-        boolean isExistsReservation = reservationRepository.existsByUserIdAndRestaurantIdAndStatus(
-                PassportUtil.getUserId(passport),
-                restaurant.getRestaurant().getRestaurantId(),
-                ReservationStatus.WAITING
-        );
-
-        if (isExistsReservation) {
-            throw new BadRequestException("이미 해당 매장에서 대기 중인 예약이 있습니다.");
-        }
-
-        Long userCouponId = dto.getReservation().getUserCouponId();
-
-        if (userCouponId != null) {
-            isExistsUserCoupon(passport, userCouponId);
-        }
-
+        // NOTE : 예약 생성
         ReservationEntity reservationEntityForSave = ReservationEntity.createReservationEntity(
                 PassportUtil.getUserId(passport),
                 dto.getReservation().getRestaurantId(),
@@ -73,31 +63,7 @@ public class ReservationServiceV1 {
 
         reservationRepository.save(reservationEntityForSave);
 
-        ReservationCreateEventDTOV1.User user = ReservationCreateEventDTOV1.User.from(
-                reservationEntityForSave.getUserId(),
-                PassportUtil.getSlackEmail(passport),
-                PassportUtil.getUsername(passport)
-        );
-
-        ReservationCreateEventDTOV1.Restaurant reservationRestaurant = ReservationCreateEventDTOV1.Restaurant.from(
-                restaurant.getRestaurant().getName(),
-                restaurant.getRestaurant().getTel()
-        );
-
-        ReservationCreateEventDTOV1.Reservation reservation = ReservationCreateEventDTOV1.Reservation.from(
-                reservationEntityForSave.getId(),
-                reservationEntityForSave.getRestaurantId(),
-                reservationEntityForSave.getHeadCount()
-
-        );
-
-        ReservationCreateEventDTOV1.Message message = ReservationCreateEventDTOV1.Message.from(
-                user,
-                reservationRestaurant,
-                reservation
-        );
-
-        kafkaMessageProducerV1.publishReservationCreateEvent(message);
+        kafkaMessageProducerV1.publishReservationCreateEvent(CreateReservationMessageDTOV1.of(passport, reservationEntityForSave, restaurantData));
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
     }
@@ -246,35 +212,6 @@ public class ReservationServiceV1 {
         }
     }
 
-    private RestaurantGetByIdResDTOV1 getRestaurantData(Long restaurantId) {
-        try {
-            return restaurantClient.getBy(restaurantId).getBody().getData();
-        } catch (FeignException.NotFound e) {
-            throw new EntityNotFoundException("존재하지 않는 식당입니다.");
-        } catch (FeignException e) {
-            throw new IllegalStateException("식당 서비스 호출 중 문제가 발생했습니다.", e);
-        }
-    }
-
-    public boolean isExistsUserCoupon(String passport, Long couponId) {
-        try {
-            // Coupon 서비스 호출
-            Set<CouponTableGetByUserIdResDTOV1.UserCoupon> userCouponSet = couponClient
-                    .getBy(passport)
-                    .getBody()
-                    .getData()
-                    .getUserCouponSet();
-
-            // 특정 couponId가 있는지 확인
-            return userCouponSet.stream()
-                    .map(CouponTableGetByUserIdResDTOV1.UserCoupon::getCoupon) // Coupon 객체 추출
-                    .anyMatch(coupon -> coupon.getId().equals(couponId)); // couponId와 일치하는지 확인
-        } catch (FeignException.NotFound e) {
-            throw new EntityNotFoundException("존재하지 않는 쿠폰입니다.");
-        } catch (FeignException e) {
-            throw new IllegalStateException("쿠폰 서비스 호출 중 문제가 발생했습니다.");
-        }
-    }
 
     private List<Long> getRestaurantIdListByUserId(String passport) {
         return restaurantClient
@@ -292,6 +229,43 @@ public class ReservationServiceV1 {
     private void validateUserRole(String role, String requiredRole) {
         if (!role.equals(requiredRole)) {
             throw new UnauthorizedAccessException("접근 권한이 없습니다.");
+        }
+    }
+
+    // NOTE : 식당 영업상태 검증
+    private void validateIsNotOperating(RestaurantGetByIdResDTOV1 restaurantDataForValidate) {
+        if (!restaurantDataForValidate.isOperating()) {
+            throw new BadRequestException("영업중인 식당이 아닙니다.");
+        }
+    }
+
+    // NOTE : 내 쿠폰 검증
+    private void validateUserCouponAccess(Long couponId, String passport) {
+
+        CouponTableGetByUserIdResDTOV1 couponDataForValidate = getCouponDataByPassport(passport);
+
+        if (!couponDataForValidate.hasCoupon(couponId)) {
+            throw new UnauthorizedAccessException("보유중인 쿠폰이 아닙니다.");
+        }
+    }
+
+    // NOTE : 식당 조회
+    private RestaurantGetByIdResDTOV1 getRestaurantDataByRestaurantId(Long restaurantId) {
+        return restaurantClient.getBy(restaurantId).getBody().getData();
+    }
+
+    // NOTE : 내 쿠폰 조회
+    private CouponTableGetByUserIdResDTOV1 getCouponDataByPassport(String passport) {
+        return couponClient.getBy(passport).getBody().getData();
+    }
+
+    // NOTE : 중복 예약 검증
+    private void validateReservationDuplication(Long userId, Long restaurantId) {
+        boolean isExistsReservation = reservationRepository
+                .existsByUserIdAndRestaurantIdAndStatus(userId, restaurantId, ReservationStatus.WAITING);
+
+        if (isExistsReservation) {
+            throw new DuplicateResourceException("이미 해당 매장에서 대기 중인 예약이 있습니다.");
         }
     }
 }
