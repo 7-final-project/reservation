@@ -15,7 +15,7 @@ import com.qring.reservation.infrastructure.client.RestaurantClient;
 import com.qring.reservation.infrastructure.messaging.dto.CreateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.ReservationSendUserInfoEventDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.ReservationUpdateEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.UpdateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
@@ -138,20 +138,12 @@ public class ReservationServiceV1 {
 
         validateAccess(passport, reservationEntityForModify.getUserId(), reservationEntityForModify.getRestaurantId());
 
-        if (reservationEntityForModify.getStatus() == ReservationStatus.CANCELLED) {
-            throw new BadRequestException("이미 취소된 예약입니다.");
-        } else if (reservationEntityForModify.getStatus() == ReservationStatus.SEATED){
-            throw new BadRequestException("이미 입장한 예약입니다.");
-        }
-
-        ReservationUpdateEventDTOV1.Reservation reservation = ReservationUpdateEventDTOV1.Reservation.from(
-                reservationEntityForModify.getId(),
-                reservationEntityForModify.getRestaurantId()
-        );
-
-        kafkaMessageProducerV1.publishReservationUpdateEvent(reservation);
+        validateReservationStatus(reservationEntityForModify.getStatus());
 
         reservationEntityForModify.updateReservationEntityStatus(dto.getReservation().getStatus());
+
+        kafkaMessageProducerV1.publishReservationUpdateEvent(UpdateReservationMessageDTOV1.of(reservationEntityForModify));
+
     }
 
     @Transactional
@@ -212,6 +204,13 @@ public class ReservationServiceV1 {
         }
     }
 
+    private static void validateReservationStatus(ReservationStatus reservationStatus) {
+        if (reservationStatus == ReservationStatus.CANCELLED) {
+            throw new BadRequestException("이미 취소된 예약입니다.");
+        } else if (reservationStatus == ReservationStatus.SEATED){
+            throw new BadRequestException("이미 입장한 예약입니다.");
+        }
+    }
 
     private List<Long> getRestaurantIdListByUserId(String passport) {
         return restaurantClient
