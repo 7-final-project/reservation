@@ -14,7 +14,7 @@ import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
 import com.qring.reservation.infrastructure.messaging.dto.CreateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.ReservationSendUserInfoEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.SendUserInfoMessageDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.UpdateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
@@ -117,7 +117,7 @@ public class ReservationServiceV1 {
         validateUserRole(PassportUtil.getRole(passport), "점주");
 
         // 점주의 소유 식당 목록
-        List<Long> restaurantIdListOfOwner = getRestaurantIdListByUserId(passport);
+        List<Long> restaurantIdListOfOwner = getRestaurantIdListByPassport(passport).getRestaurantList();
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(
                 pageable,
@@ -138,7 +138,7 @@ public class ReservationServiceV1 {
 
         validateAccess(passport, reservationEntityForModify.getUserId(), reservationEntityForModify.getRestaurantId());
 
-        validateReservationStatus(reservationEntityForModify.getStatus());
+        validateStatusForUpdate(reservationEntityForModify.getStatus());
 
         reservationEntityForModify.updateReservationEntityStatus(dto.getReservation().getStatus());
 
@@ -151,14 +151,9 @@ public class ReservationServiceV1 {
 
         ReservationEntity reservationEntityForDelete = getReservationEntityById(id);
 
-        if (!PassportUtil.getUserId(passport).equals(reservationEntityForDelete.getUserId())) {
-            throw new UnauthorizedAccessException("자신의 예약만 접근할 수 있습니다.");
-        }
+        validateUserReservationAccess(passport, reservationEntityForDelete.getUserId());
 
-        // 대기 상태 확인 (대기중인 경우 삭제 불가)
-        if (reservationEntityForDelete.getStatus() == ReservationStatus.WAITING) {
-            throw new BadRequestException("현재 대기중인 예약입니다.");
-        }
+        validateStatusForDeletion(reservationEntityForDelete.getStatus());
 
         reservationEntityForDelete.deleteReservationEntity(PassportUtil.getUsername(passport));
     }
@@ -167,16 +162,9 @@ public class ReservationServiceV1 {
 
         // 유저 정보 조회
         UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(event.getId()).getBody()).getData();
-
-        // 유저 정보 생성
-        ReservationSendUserInfoEventDTOV1.User reservationUser = ReservationSendUserInfoEventDTOV1.User.from(
-                dto.getUser().getId(),
-                dto.getUser().getSlackEmail(),
-                dto.getUser().getPhone()
-        );
-
+        
         // Kafka 메시지 발행
-        kafkaMessageProducerV1.publishUserInfoSendEvent(reservationUser);
+        kafkaMessageProducerV1.publishUserInfoSendEvent(SendUserInfoMessageDTOV1.of(dto));
     }
 
     private void validateAccess(String passport, Long userId, Long restaurantId) {
@@ -187,44 +175,28 @@ public class ReservationServiceV1 {
             case "관리자":
                 break;
             case "고객":
-                if (!Objects.equals(PassportUtil.getUserId(passport), userId)) {
-                    throw new UnauthorizedAccessException("자신의 예약만 접근할 수 있습니다.");
-                }
+                validateUserReservationAccess(passport, userId);
                 break;
             case "점주":
-                // 점주의 소유 식당 목록
-                List<Long> restaurantIdListOfOwner = getRestaurantIdListByUserId(passport);
-
-                if (!restaurantIdListOfOwner.contains(restaurantId)) {
-                    throw new UnauthorizedAccessException("자신의 식당 예약만 접근할 수 있습니다.");
-                }
+                RestaurantIdTableResDTOV1 restaurantData = getRestaurantIdListByPassport(passport);
+                validateOwnerReservationAccess(restaurantId, restaurantData);
                 break;
             default:
                 throw new BadRequestException("유효하지 않은 역할입니다: " + role);
         }
     }
 
-    private static void validateReservationStatus(ReservationStatus reservationStatus) {
-        if (reservationStatus == ReservationStatus.CANCELLED) {
-            throw new BadRequestException("이미 취소된 예약입니다.");
-        } else if (reservationStatus == ReservationStatus.SEATED){
-            throw new BadRequestException("이미 입장한 예약입니다.");
-        }
-    }
 
-    private List<Long> getRestaurantIdListByUserId(String passport) {
-        return restaurantClient
-                .getRestaurantTableByUserId(passport) // Restaurant 서비스 호출
-                .getBody()
-                .getData()
-                .getRestaurantList(); // 식당 ID 리스트 반환
+    private RestaurantIdTableResDTOV1 getRestaurantIdListByPassport(String passport) {
+        return Objects.requireNonNull(restaurantClient.getRestaurantTableByUserId(passport).getBody()).getData();
     }
-
+    
     private ReservationEntity getReservationEntityById(Long id) {
         return reservationRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 예약입니다."));
     }
 
+    // NOTE : 접근 권한 검증
     private void validateUserRole(String role, String requiredRole) {
         if (!role.equals(requiredRole)) {
             throw new UnauthorizedAccessException("접근 권한이 없습니다.");
@@ -245,6 +217,36 @@ public class ReservationServiceV1 {
 
         if (!couponDataForValidate.hasCoupon(couponId)) {
             throw new UnauthorizedAccessException("보유중인 쿠폰이 아닙니다.");
+        }
+    }
+
+    // NOTE : 예약 상태 검증
+    private static void validateReservationStatus(ReservationStatus reservationStatus, Set<ReservationStatus> invalidStatuses, String errorMessage) {
+        if (invalidStatuses.contains(reservationStatus)) {
+            throw new BadRequestException(errorMessage);
+        }
+    }
+    public void validateStatusForUpdate(ReservationStatus reservationStatus) {
+        Set<ReservationStatus> invalidStatusesForUpdate = Set.of(ReservationStatus.CANCELLED, ReservationStatus.SEATED);
+        validateReservationStatus(reservationStatus, invalidStatusesForUpdate, "예약 상태가 이미 변경되었습니다.");
+    }
+
+    public void validateStatusForDeletion(ReservationStatus reservationStatus) {
+        Set<ReservationStatus> invalidStatusesForDeletion = Set.of(ReservationStatus.WAITING);
+        validateReservationStatus(reservationStatus, invalidStatusesForDeletion, "현재 대기중인 예약입니다.");
+    }
+
+    // NOTE : 본인 예약 검증
+    private static void validateUserReservationAccess(String passport, Long userId) {
+        if (!PassportUtil.getUserId(passport).equals(userId)) {
+            throw new UnauthorizedAccessException("자신의 예약만 접근할 수 있습니다.");
+        }
+    }
+
+    // NOTE : 본인 식당 예약 검증
+    private static void validateOwnerReservationAccess(Long restaurantId, RestaurantIdTableResDTOV1 restaurantData) {
+        if (!restaurantData.hasRestaurant(restaurantId)) {
+            throw new UnauthorizedAccessException("자신의 식당 예약만 접근할 수 있습니다.");
         }
     }
 
