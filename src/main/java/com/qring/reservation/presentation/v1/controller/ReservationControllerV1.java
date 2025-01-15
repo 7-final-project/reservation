@@ -26,7 +26,7 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
 
     @PostMapping
     public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-Passport-Token") String passport,
-                                                                  @Valid@RequestBody PostReservationReqDTOV1 dto) {
+                                                                  @Valid @RequestBody PostReservationReqDTOV1 dto) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationPostResDTOV1>builder()
