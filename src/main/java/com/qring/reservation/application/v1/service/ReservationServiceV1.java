@@ -47,7 +47,7 @@ public class ReservationServiceV1 {
         validateIsNotOperating(restaurantData);
 
         // NOTE : 중복 예약 확인
-        validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getRestaurantId());
+        //validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getRestaurantId());
 
         // NOTE : 쿠폰 검증
         if (dto.getReservation().getUserCouponId() != null) {
@@ -162,7 +162,7 @@ public class ReservationServiceV1 {
     public void sendUserInfoByEvent(QueueAlarmEventDTOV1 event) {
 
         // 유저 정보 조회
-        UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(event.getId()).getBody()).getData();
+        UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(getReservationEntityById(event.getId()).getUserId()).getBody()).getData();
         
         // Kafka 메시지 발행
         kafkaMessageProducerV1.publishUserInfoSendEvent(SendUserInfoMessageDTOV1.of(dto));
@@ -186,7 +186,6 @@ public class ReservationServiceV1 {
                 throw new BadRequestException("유효하지 않은 역할입니다: " + role);
         }
     }
-
 
     private RestaurantIdTableResDTOV1 getRestaurantIdListByPassport(String passport) {
         return Objects.requireNonNull(restaurantClient.getRestaurantTableByUserId(passport).getBody()).getData();
