@@ -6,7 +6,7 @@ import com.qring.reservation.infrastructure.messaging.dto.UpdateReservationMessa
 
 public interface KafkaMessageProducerV1 {
 
-    void publishReservationCreateEvent(CreateReservationMessageDTOV1 message);
+    void publishReservationCreateEvent(String regionCode, CreateReservationMessageDTOV1 message);
 
     void publishReservationUpdateEvent(UpdateReservationMessageDTOV1 message);
 

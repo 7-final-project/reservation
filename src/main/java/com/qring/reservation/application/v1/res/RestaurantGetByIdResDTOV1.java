@@ -20,6 +20,7 @@ public class RestaurantGetByIdResDTOV1 {
 
         private Long id;
         private Long categoryId;
+        private String regionCode;
         private String name;
         private String tel;
         private String operationStatus; // NOTE : "영업중" 만 취급하고 있음

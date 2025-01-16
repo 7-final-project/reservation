@@ -36,6 +36,6 @@ public class KafkaProducerConfig {
 
     @Bean
     public NewTopic reservationCreateEventTopic() {
-        return new NewTopic("reservation-create-event-topic", 1, (short) 1);
+        return new NewTopic("reservation-create-event-topic", 40, (short) 1);
     }
 }
