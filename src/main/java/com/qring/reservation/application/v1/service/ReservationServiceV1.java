@@ -1,24 +1,25 @@
 package com.qring.reservation.application.v1.service;
 
 import com.qring.reservation.application.global.exception.BadRequestException;
+import com.qring.reservation.application.global.exception.DuplicateResourceException;
 import com.qring.reservation.application.global.exception.EntityNotFoundException;
 import com.qring.reservation.application.global.exception.UnauthorizedAccessException;
 import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
 import com.qring.reservation.application.v1.res.*;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
+import com.qring.reservation.domain.model.constraint.RoleType;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.AuthClient;
 import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClient;
+import com.qring.reservation.infrastructure.messaging.dto.CreateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.ReservationCreateEventDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.ReservationSendUserInfoEventDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.ReservationUpdateEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.SendUserInfoMessageDTOV1;
+import com.qring.reservation.infrastructure.messaging.dto.UpdateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,30 +41,20 @@ public class ReservationServiceV1 {
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
 
-        RestaurantGetByIdResDTOV1 restaurant = getRestaurantData(dto.getReservation().getRestaurantId());
+        RestaurantGetByIdResDTOV1 restaurantData = getRestaurantDataByRestaurantId(dto.getReservation().getRestaurantId());
 
-        // 영업상태 확인
-        if (!"영업중".equals(restaurant.getRestaurant().getOperationStatus())) {
-            throw new BadRequestException("현재 영업 중이 아닙니다.");
+        // NOTE : 운영시간 검증
+        validateIsNotOperating(restaurantData);
+
+        // NOTE : 중복 예약 확인
+        validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getRestaurantId());
+
+        // NOTE : 쿠폰 검증
+        if (dto.getReservation().getUserCouponId() != null) {
+            validateUserCouponAccess(dto.getReservation().getUserCouponId(), passport);
         }
 
-        // 중복 예약 확인
-        boolean isExistsReservation = reservationRepository.existsByUserIdAndRestaurantIdAndStatus(
-                PassportUtil.getUserId(passport),
-                restaurant.getRestaurant().getRestaurantId(),
-                ReservationStatus.WAITING
-        );
-
-        if (isExistsReservation) {
-            throw new BadRequestException("이미 해당 매장에서 대기 중인 예약이 있습니다.");
-        }
-
-        Long userCouponId = dto.getReservation().getUserCouponId();
-
-        if (userCouponId != null) {
-            isExistsUserCoupon(passport, userCouponId);
-        }
-
+        // NOTE : 예약 생성
         ReservationEntity reservationEntityForSave = ReservationEntity.createReservationEntity(
                 PassportUtil.getUserId(passport),
                 dto.getReservation().getRestaurantId(),
@@ -73,31 +64,7 @@ public class ReservationServiceV1 {
 
         reservationRepository.save(reservationEntityForSave);
 
-        ReservationCreateEventDTOV1.User user = ReservationCreateEventDTOV1.User.from(
-                reservationEntityForSave.getUserId(),
-                PassportUtil.getSlackEmail(passport),
-                PassportUtil.getUsername(passport)
-        );
-
-        ReservationCreateEventDTOV1.Restaurant reservationRestaurant = ReservationCreateEventDTOV1.Restaurant.from(
-                restaurant.getRestaurant().getName(),
-                restaurant.getRestaurant().getTel()
-        );
-
-        ReservationCreateEventDTOV1.Reservation reservation = ReservationCreateEventDTOV1.Reservation.from(
-                reservationEntityForSave.getId(),
-                reservationEntityForSave.getRestaurantId(),
-                reservationEntityForSave.getHeadCount()
-
-        );
-
-        ReservationCreateEventDTOV1.Message message = ReservationCreateEventDTOV1.Message.from(
-                user,
-                reservationRestaurant,
-                reservation
-        );
-
-        kafkaMessageProducerV1.publishReservationCreateEvent(message);
+        kafkaMessageProducerV1.publishReservationCreateEvent(CreateReservationMessageDTOV1.of(passport, reservationEntityForSave, restaurantData));
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
     }
@@ -115,11 +82,11 @@ public class ReservationServiceV1 {
     @Transactional(readOnly = true)
     public ReservationSearchResDTOV1 searchByAdmin(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
 
-        validateUserRole(PassportUtil.getRole(passport), "관리자");
+        validateUserRole(PassportUtil.getRole(passport), RoleType.ADMIN);
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
                 pageable,
-                "관리자",
+                RoleType.ADMIN,
                 userId,
                 restaurantId,
                 id,
@@ -131,11 +98,11 @@ public class ReservationServiceV1 {
     @Transactional(readOnly = true)
     public ReservationSearchResDTOV1 searchByCustomer(Pageable pageable, String passport, Long restaurantId, Long id, String sort) {
 
-        validateUserRole(PassportUtil.getRole(passport), "고객");
+        validateUserRole(PassportUtil.getRole(passport), RoleType.CUSTOMER);
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
                 pageable,
-                "고객",
+                RoleType.CUSTOMER,
                 PassportUtil.getUserId(passport),
                 restaurantId,
                 id,
@@ -148,10 +115,10 @@ public class ReservationServiceV1 {
     @Transactional(readOnly = true)
     public ReservationSearchResDTOV1 searchByOwner(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
 
-        validateUserRole(PassportUtil.getRole(passport), "점주");
+        validateUserRole(PassportUtil.getRole(passport), RoleType.OWNER);
 
         // 점주의 소유 식당 목록
-        List<Long> restaurantIdListOfOwner = getRestaurantIdListByUserId(passport);
+        List<Long> restaurantIdListOfOwner = getRestaurantIdListByPassport(passport).getRestaurantList();
 
         Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(
                 pageable,
@@ -172,20 +139,12 @@ public class ReservationServiceV1 {
 
         validateAccess(passport, reservationEntityForModify.getUserId(), reservationEntityForModify.getRestaurantId());
 
-        if (reservationEntityForModify.getStatus() == ReservationStatus.CANCELLED) {
-            throw new BadRequestException("이미 취소된 예약입니다.");
-        } else if (reservationEntityForModify.getStatus() == ReservationStatus.SEATED){
-            throw new BadRequestException("이미 입장한 예약입니다.");
-        }
-
-        ReservationUpdateEventDTOV1.Reservation reservation = ReservationUpdateEventDTOV1.Reservation.from(
-                reservationEntityForModify.getId(),
-                reservationEntityForModify.getRestaurantId()
-        );
-
-        kafkaMessageProducerV1.publishReservationUpdateEvent(reservation);
+        validateStatusForUpdate(reservationEntityForModify.getStatus());
 
         reservationEntityForModify.updateReservationEntityStatus(dto.getReservation().getStatus());
+
+        kafkaMessageProducerV1.publishReservationUpdateEvent(UpdateReservationMessageDTOV1.of(reservationEntityForModify));
+
     }
 
     @Transactional
@@ -193,14 +152,9 @@ public class ReservationServiceV1 {
 
         ReservationEntity reservationEntityForDelete = getReservationEntityById(id);
 
-        if (!PassportUtil.getUserId(passport).equals(reservationEntityForDelete.getUserId())) {
-            throw new UnauthorizedAccessException("자신의 예약만 접근할 수 있습니다.");
-        }
+        validateUserReservationAccess(passport, reservationEntityForDelete.getUserId());
 
-        // 대기 상태 확인 (대기중인 경우 삭제 불가)
-        if (reservationEntityForDelete.getStatus() == ReservationStatus.WAITING) {
-            throw new BadRequestException("현재 대기중인 예약입니다.");
-        }
+        validateStatusForDeletion(reservationEntityForDelete.getStatus());
 
         reservationEntityForDelete.deleteReservationEntity(PassportUtil.getUsername(passport));
     }
@@ -209,16 +163,9 @@ public class ReservationServiceV1 {
 
         // 유저 정보 조회
         UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(event.getId()).getBody()).getData();
-
-        // 유저 정보 생성
-        ReservationSendUserInfoEventDTOV1.User reservationUser = ReservationSendUserInfoEventDTOV1.User.from(
-                dto.getUser().getId(),
-                dto.getUser().getSlackEmail(),
-                dto.getUser().getPhone()
-        );
-
+        
         // Kafka 메시지 발행
-        kafkaMessageProducerV1.publishUserInfoSendEvent(reservationUser);
+        kafkaMessageProducerV1.publishUserInfoSendEvent(SendUserInfoMessageDTOV1.of(dto));
     }
 
     private void validateAccess(String passport, Long userId, Long restaurantId) {
@@ -226,72 +173,101 @@ public class ReservationServiceV1 {
         String role = PassportUtil.getRole(passport);
 
         switch (role) {
-            case "관리자":
+            case RoleType.ADMIN:
                 break;
-            case "고객":
-                if (!Objects.equals(PassportUtil.getUserId(passport), userId)) {
-                    throw new UnauthorizedAccessException("자신의 예약만 접근할 수 있습니다.");
-                }
+            case RoleType.CUSTOMER:
+                validateUserReservationAccess(passport, userId);
                 break;
-            case "점주":
-                // 점주의 소유 식당 목록
-                List<Long> restaurantIdListOfOwner = getRestaurantIdListByUserId(passport);
-
-                if (!restaurantIdListOfOwner.contains(restaurantId)) {
-                    throw new UnauthorizedAccessException("자신의 식당 예약만 접근할 수 있습니다.");
-                }
+            case RoleType.OWNER:
+                RestaurantIdTableResDTOV1 restaurantData = getRestaurantIdListByPassport(passport);
+                validateOwnerReservationAccess(restaurantId, restaurantData);
                 break;
             default:
                 throw new BadRequestException("유효하지 않은 역할입니다: " + role);
         }
     }
 
-    private RestaurantGetByIdResDTOV1 getRestaurantData(Long restaurantId) {
-        try {
-            return restaurantClient.getBy(restaurantId).getBody().getData();
-        } catch (FeignException.NotFound e) {
-            throw new EntityNotFoundException("존재하지 않는 식당입니다.");
-        } catch (FeignException e) {
-            throw new IllegalStateException("식당 서비스 호출 중 문제가 발생했습니다.", e);
-        }
+
+    private RestaurantIdTableResDTOV1 getRestaurantIdListByPassport(String passport) {
+        return Objects.requireNonNull(restaurantClient.getRestaurantTableByUserId(passport).getBody()).getData();
     }
-
-    public boolean isExistsUserCoupon(String passport, Long couponId) {
-        try {
-            // Coupon 서비스 호출
-            Set<CouponTableGetByUserIdResDTOV1.UserCoupon> userCouponSet = couponClient
-                    .getBy(passport)
-                    .getBody()
-                    .getData()
-                    .getUserCouponSet();
-
-            // 특정 couponId가 있는지 확인
-            return userCouponSet.stream()
-                    .map(CouponTableGetByUserIdResDTOV1.UserCoupon::getCoupon) // Coupon 객체 추출
-                    .anyMatch(coupon -> coupon.getId().equals(couponId)); // couponId와 일치하는지 확인
-        } catch (FeignException.NotFound e) {
-            throw new EntityNotFoundException("존재하지 않는 쿠폰입니다.");
-        } catch (FeignException e) {
-            throw new IllegalStateException("쿠폰 서비스 호출 중 문제가 발생했습니다.");
-        }
-    }
-
-    private List<Long> getRestaurantIdListByUserId(String passport) {
-        return restaurantClient
-                .getRestaurantTableByUserId(passport) // Restaurant 서비스 호출
-                .getBody()
-                .getData()
-                .getRestaurantList(); // 식당 ID 리스트 반환
-    }
-
+    
     private ReservationEntity getReservationEntityById(Long id) {
         return reservationRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 예약입니다."));
     }
 
+    // NOTE : 접근 권한 검증
     private void validateUserRole(String role, String requiredRole) {
         if (!role.equals(requiredRole)) {
             throw new UnauthorizedAccessException("접근 권한이 없습니다.");
+        }
+    }
+
+    // NOTE : 식당 영업상태 검증
+    private void validateIsNotOperating(RestaurantGetByIdResDTOV1 restaurantDataForValidate) {
+        if (!restaurantDataForValidate.isOperating()) {
+            throw new BadRequestException("영업중인 식당이 아닙니다.");
+        }
+    }
+
+    // NOTE : 내 쿠폰 검증
+    private void validateUserCouponAccess(Long couponId, String passport) {
+
+        CouponTableGetByUserIdResDTOV1 couponDataForValidate = getCouponDataByPassport(passport);
+
+        if (!couponDataForValidate.hasCoupon(couponId)) {
+            throw new UnauthorizedAccessException("보유중인 쿠폰이 아닙니다.");
+        }
+    }
+
+    // NOTE : 예약 상태 검증
+    private static void validateReservationStatus(ReservationStatus reservationStatus, Set<ReservationStatus> invalidStatuses, String errorMessage) {
+        if (invalidStatuses.contains(reservationStatus)) {
+            throw new BadRequestException(errorMessage);
+        }
+    }
+    public void validateStatusForUpdate(ReservationStatus reservationStatus) {
+        Set<ReservationStatus> invalidStatusesForUpdate = Set.of(ReservationStatus.CANCELLED, ReservationStatus.SEATED);
+        validateReservationStatus(reservationStatus, invalidStatusesForUpdate, "예약 상태가 이미 변경되었습니다.");
+    }
+
+    public void validateStatusForDeletion(ReservationStatus reservationStatus) {
+        Set<ReservationStatus> invalidStatusesForDeletion = Set.of(ReservationStatus.WAITING);
+        validateReservationStatus(reservationStatus, invalidStatusesForDeletion, "현재 대기중인 예약입니다.");
+    }
+
+    // NOTE : 본인 예약 검증
+    private static void validateUserReservationAccess(String passport, Long userId) {
+        if (!PassportUtil.getUserId(passport).equals(userId)) {
+            throw new UnauthorizedAccessException("자신의 예약만 접근할 수 있습니다.");
+        }
+    }
+
+    // NOTE : 본인 식당 예약 검증
+    private static void validateOwnerReservationAccess(Long restaurantId, RestaurantIdTableResDTOV1 restaurantData) {
+        if (!restaurantData.hasRestaurant(restaurantId)) {
+            throw new UnauthorizedAccessException("자신의 식당 예약만 접근할 수 있습니다.");
+        }
+    }
+
+    // NOTE : 식당 조회
+    private RestaurantGetByIdResDTOV1 getRestaurantDataByRestaurantId(Long restaurantId) {
+        return restaurantClient.getBy(restaurantId).getBody().getData();
+    }
+
+    // NOTE : 내 쿠폰 조회
+    private CouponTableGetByUserIdResDTOV1 getCouponDataByPassport(String passport) {
+        return couponClient.getBy(passport).getBody().getData();
+    }
+
+    // NOTE : 중복 예약 검증
+    private void validateReservationDuplication(Long userId, Long restaurantId) {
+        boolean isExistsReservation = reservationRepository
+                .existsByUserIdAndRestaurantIdAndStatus(userId, restaurantId, ReservationStatus.WAITING);
+
+        if (isExistsReservation) {
+            throw new DuplicateResourceException("이미 해당 매장에서 대기 중인 예약이 있습니다.");
         }
     }
 }
