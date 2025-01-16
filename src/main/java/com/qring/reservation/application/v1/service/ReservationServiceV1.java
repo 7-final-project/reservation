@@ -47,7 +47,7 @@ public class ReservationServiceV1 {
         validateIsNotOperating(restaurantData);
 
         // NOTE : 중복 예약 확인
-        //validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getRestaurantId());
+        //validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getId());
 
         // NOTE : 쿠폰 검증
         if (dto.getReservation().getUserCouponId() != null) {
