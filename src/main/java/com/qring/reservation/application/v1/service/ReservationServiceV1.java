@@ -176,6 +176,14 @@ public class ReservationServiceV1 {
         reservationRepository.delete(reservationEntityForDelete);
     }
 
+    @Transactional
+    public void putByQueueFailEvent(Long id) {
+
+        ReservationEntity reservationEntityForModify = getReservationEntityById(id);
+
+        reservationEntityForModify.updateReservationEntityStatus("대기");
+    }
+
     private void validateAccess(String passport, Long userId, Long restaurantId) {
 
         String role = PassportUtil.getRole(passport);
