@@ -35,4 +35,13 @@ public class KafkaMessageConsumerV1 {
             throw new IllegalArgumentException("Invalid message format: " + message, e);
         }
     }
+
+    @KafkaListener(topics = "${spring.kafka.topic.queue-create-fail-event}", groupId = "${spring.kafka.consumer.group-id}")
+    public void handleReservationFailed(String message) {
+        try {
+            reservationServiceV1.deleteByQueueFailEvent(Long.parseLong(message));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid message format: " + message, e);
+        }
+    }
 }

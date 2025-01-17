@@ -168,6 +168,14 @@ public class ReservationServiceV1 {
         kafkaMessageProducerV1.publishUserInfoSendEvent(SendUserInfoMessageDTOV1.of(dto));
     }
 
+    @Transactional
+    public void deleteByQueueFailEvent(Long id) {
+
+        ReservationEntity reservationEntityForDelete = getReservationEntityById(id);
+
+        reservationRepository.delete(reservationEntityForDelete);
+    }
+
     private void validateAccess(String passport, Long userId, Long restaurantId) {
 
         String role = PassportUtil.getRole(passport);
@@ -226,6 +234,7 @@ public class ReservationServiceV1 {
             throw new BadRequestException(errorMessage);
         }
     }
+
     public void validateStatusForUpdate(ReservationStatus reservationStatus) {
         Set<ReservationStatus> invalidStatusesForUpdate = Set.of(ReservationStatus.CANCELLED, ReservationStatus.SEATED);
         validateReservationStatus(reservationStatus, invalidStatusesForUpdate, "예약 상태가 이미 변경되었습니다.");

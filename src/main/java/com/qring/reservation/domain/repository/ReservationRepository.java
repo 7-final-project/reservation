@@ -12,6 +12,8 @@ public interface ReservationRepository {
 
     ReservationEntity save(ReservationEntity reservationEntity);
 
+    void delete(ReservationEntity reservationEntity);
+
     Optional<ReservationEntity> findByIdAndDeletedAtIsNull(Long id);
 
     Page<ReservationEntity> findReservationPageByDeletedAtIsNullWithConditions(Pageable pageable, String userRole, Long userId, Long restaurantId, Long id, String sort);

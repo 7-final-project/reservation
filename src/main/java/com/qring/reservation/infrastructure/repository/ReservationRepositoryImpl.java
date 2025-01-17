@@ -29,6 +29,10 @@ public class ReservationRepositoryImpl implements ReservationRepository {
         return jpaReservationRepository.save(reservationEntity);
     }
 
+    public void delete(ReservationEntity reservationEntity) {
+        jpaReservationRepository.delete(reservationEntity);
+    }
+
     public Optional<ReservationEntity> findByIdAndDeletedAtIsNull(Long id) {
         return jpaReservationRepository.findByIdAndDeletedAtIsNull(id);
     }
