@@ -1,6 +1,9 @@
 package com.qring.reservation.infrastructure.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qring.reservation.application.global.exception.BadRequestException;
+import com.qring.reservation.application.global.exception.ErrorCode;
+import com.qring.reservation.application.global.exception.ReservationException;
 import com.qring.reservation.application.v1.service.ReservationServiceV1;
 import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +23,9 @@ public class KafkaMessageConsumerV1 {
     public void extractId(String message) {
         try {
             QueueAlarmEventDTOV1 event = parseMessage(message);
-            log.info("Parsed event: {}", event);
             reservationServiceV1.sendUserInfoByEvent(event);
         } catch (Exception e) {
-            log.error("메시지 추출 실패 : {}", message, e);
+            throw new BadRequestException("메시지 추출 실패: " + message);
         }
     }
 
@@ -32,7 +34,7 @@ public class KafkaMessageConsumerV1 {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(message, QueueAlarmEventDTOV1.class);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid message format: " + message, e);
+            throw new BadRequestException("메시지 추출 실패: " + message);
         }
     }
 
@@ -41,7 +43,7 @@ public class KafkaMessageConsumerV1 {
         try {
             reservationServiceV1.deleteByQueueFailEvent(Long.parseLong(message));
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid message format: " + message, e);
+            throw new BadRequestException("메시지 추출 실패: " + message);
         }
     }
 
@@ -50,7 +52,7 @@ public class KafkaMessageConsumerV1 {
         try {
             reservationServiceV1.putByQueueFailEvent(Long.parseLong(message));
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid message format: " + message, e);
+            throw new BadRequestException("메시지 추출 실패: " + message);
         }
     }
 }
