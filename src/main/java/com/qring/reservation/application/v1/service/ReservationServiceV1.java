@@ -64,7 +64,7 @@ public class ReservationServiceV1 {
 
         reservationRepository.save(reservationEntityForSave);
 
-        kafkaMessageProducerV1.publishReservationCreateEvent(restaurantData.getRestaurant().getRegionCode(),CreateReservationMessageDTOV1.of(passport, reservationEntityForSave, restaurantData));
+        kafkaMessageProducerV1.publishReservationCreateEvent(CreateReservationMessageDTOV1.of(passport, reservationEntityForSave, restaurantData));
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
     }

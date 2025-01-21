@@ -14,9 +14,9 @@ public class KafkaMessageProducerImplV1 implements KafkaMessageProducerV1 {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publishReservationCreateEvent(String regionCode, CreateReservationMessageDTOV1 message) {
+    public void publishReservationCreateEvent(CreateReservationMessageDTOV1 message) {
 
-        kafkaTemplate.send("reservation-create-event-topic", regionCode, message);
+        kafkaTemplate.send("reservation-create-event-topic", message);
     }
 
     public void publishReservationUpdateEvent(UpdateReservationMessageDTOV1 message) {
