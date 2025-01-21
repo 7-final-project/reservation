@@ -11,6 +11,7 @@ import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.CouponClient;
+import com.qring.reservation.infrastructure.client.RestaurantClientV1;
 import com.qring.reservation.infrastructure.client.RestaurantClientV2;
 import com.qring.reservation.infrastructure.messaging.v2.dto.CreateReservationMessageDTOV2;
 import com.qring.reservation.infrastructure.util.PassportUtil;
@@ -30,12 +31,12 @@ public class ReservationServiceV2 {
 
     private final KafkaMessageProducerV2 kafkaMessageProducerV2;
     private final ReservationRepository reservationRepository;
-    private final RestaurantClientV2 restaurantClientV2;
+    private final RestaurantClientV1 restaurantClientV1;
     private final CouponClient couponClient;
 
     public ReservationServiceV2(@Qualifier("partition-producer") KafkaMessageProducerV2 kafkaMessageProducerV2,
                                 ReservationRepository reservationRepository,
-                                RestaurantClientV2 restaurantClientV2,
+                                RestaurantClientV1 restaurantClientV1,
                                 CouponClient couponClient) {
 
         /*
@@ -46,7 +47,7 @@ public class ReservationServiceV2 {
 
         this.kafkaMessageProducerV2 = kafkaMessageProducerV2;
         this.reservationRepository = reservationRepository;
-        this.restaurantClientV2 = restaurantClientV2;
+        this.restaurantClientV1 = restaurantClientV1;
         this.couponClient = couponClient;
     }
 
@@ -104,7 +105,7 @@ public class ReservationServiceV2 {
 
     // NOTE : 식당 조회
     private RestaurantGetByIdResDTOV2 getRestaurantDataByRestaurantId(Long restaurantId) {
-        return restaurantClientV2.getBy(restaurantId).getBody().getData();
+        return restaurantClientV1.getByV2(restaurantId).getBody().getData();
     }
 
     // NOTE : 내 쿠폰 조회

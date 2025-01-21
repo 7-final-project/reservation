@@ -257,7 +257,7 @@ public class ReservationServiceV1 {
 
     // NOTE : 식당 조회
     private RestaurantGetByIdResDTOV1 getRestaurantDataByRestaurantId(Long restaurantId) {
-        return restaurantClientV1.getBy(restaurantId).getBody().getData();
+        return restaurantClientV1.getByV1(restaurantId).getBody().getData();
     }
 
     // NOTE : 내 쿠폰 조회
