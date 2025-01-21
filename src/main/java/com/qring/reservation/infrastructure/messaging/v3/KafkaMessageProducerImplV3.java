@@ -23,7 +23,7 @@ public class KafkaMessageProducerImplV3 implements KafkaMessageProducerV2 {
 
     public void publishReservationCreateEvent(String regionCode, CreateReservationMessageDTOV2 message) {
 
-        String topicName = "reservation-create-event-" + regionCode;
+        String topicName = "reservation-create-event-topic-" + regionCode;
 
         kafkaAdmin.createOrModifyTopics(new NewTopic(topicName, 1, (short) 1));
 
