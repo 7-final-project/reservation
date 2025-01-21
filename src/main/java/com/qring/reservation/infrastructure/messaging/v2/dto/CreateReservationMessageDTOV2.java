@@ -1,6 +1,7 @@
-package com.qring.reservation.infrastructure.messaging.dto;
+package com.qring.reservation.infrastructure.messaging.v2.dto;
 
 import com.qring.reservation.application.v1.res.RestaurantGetByIdResDTOV1;
+import com.qring.reservation.application.v2.res.RestaurantGetByIdResDTOV2;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import lombok.AllArgsConstructor;
@@ -12,14 +13,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateReservationMessageDTOV1 {
+public class CreateReservationMessageDTOV2 {
 
 
     private User user;
     private Reservation reservation;
 
-    public static CreateReservationMessageDTOV1 of(String passport, ReservationEntity reservationEntity, RestaurantGetByIdResDTOV1 restaurantData) {
-        return CreateReservationMessageDTOV1.builder()
+    public static CreateReservationMessageDTOV2 of(String passport, ReservationEntity reservationEntity, RestaurantGetByIdResDTOV2 restaurantData) {
+        return CreateReservationMessageDTOV2.builder()
                 .user(User.from(passport))
                 .reservation(Reservation.from(reservationEntity, restaurantData))
                 .build();
@@ -54,7 +55,7 @@ public class CreateReservationMessageDTOV1 {
         private int headCount;
         private Restaurant restaurant;
 
-        public static Reservation from(ReservationEntity reservationEntity, RestaurantGetByIdResDTOV1 restaurantData) {
+        public static Reservation from(ReservationEntity reservationEntity, RestaurantGetByIdResDTOV2 restaurantData) {
             return Reservation.builder()
                     .id(reservationEntity.getId())
                     .headCount(reservationEntity.getHeadCount())
@@ -72,7 +73,7 @@ public class CreateReservationMessageDTOV1 {
             private String name;
             private String tel;
 
-            public static Restaurant from(RestaurantGetByIdResDTOV1 restaurantData) {
+            public static Restaurant from(RestaurantGetByIdResDTOV2 restaurantData) {
                 return Restaurant.builder()
                         .id(restaurantData.getRestaurant().getId())
                         .name(restaurantData.getRestaurant().getName())
