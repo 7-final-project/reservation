@@ -11,6 +11,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class KafkaMessageProducerImplV2 implements KafkaMessageProducerV2 {
 
+    // -----
+    // NOTE : 다중 파티션을 적용한 서비스입니다. 지역 코드를 key 로 가집니다.
+    // -----
+
     @Value("${spring.kafka.topic.reservation-create-event.v2}")
     private String reservationCreateEventTopic;
 
