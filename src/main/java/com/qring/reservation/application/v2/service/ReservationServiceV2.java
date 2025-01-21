@@ -15,24 +15,40 @@ import com.qring.reservation.infrastructure.client.RestaurantClientV2;
 import com.qring.reservation.infrastructure.messaging.v2.dto.CreateReservationMessageDTOV2;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j(topic = "ReservationServiceV2")
 public class ReservationServiceV2 {
 
     // -----
-    // NOTE : 다중 파티션을 적용한 서비스입니다. 지역 코드를 key 로 가집니다.
+    // NOTE : 다중 파티션 및 다중 토픽을 적용한 서비스입니다. 지역 코드를 key 로 가집니다.
     // -----
 
-    private final ReservationRepository reservationRepository;
     private final KafkaMessageProducerV2 kafkaMessageProducerV2;
+    private final ReservationRepository reservationRepository;
     private final RestaurantClientV2 restaurantClientV2;
     private final CouponClient couponClient;
+
+    public ReservationServiceV2(@Qualifier("partition-producer") KafkaMessageProducerV2 kafkaMessageProducerV2,
+                                ReservationRepository reservationRepository,
+                                RestaurantClientV2 restaurantClientV2,
+                                CouponClient couponClient) {
+
+        /*
+            NOTE
+              다중 파티션 : @Qualifier("partition-producer")
+              다중 토픽  : @Qualifier("topic-producer")
+        */
+
+        this.kafkaMessageProducerV2 = kafkaMessageProducerV2;
+        this.reservationRepository = reservationRepository;
+        this.restaurantClientV2 = restaurantClientV2;
+        this.couponClient = couponClient;
+    }
 
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {

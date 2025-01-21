@@ -3,12 +3,14 @@ package com.qring.reservation.infrastructure.messaging.v2;
 import com.qring.reservation.application.v2.message.KafkaMessageProducerV2;
 import com.qring.reservation.infrastructure.messaging.v2.dto.CreateReservationMessageDTOV2;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Qualifier("partition-producer")
 public class KafkaMessageProducerImplV2 implements KafkaMessageProducerV2 {
 
     // -----

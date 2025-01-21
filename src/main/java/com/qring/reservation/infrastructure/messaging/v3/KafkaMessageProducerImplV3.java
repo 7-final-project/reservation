@@ -4,12 +4,14 @@ import com.qring.reservation.application.v2.message.KafkaMessageProducerV2;
 import com.qring.reservation.infrastructure.messaging.v2.dto.CreateReservationMessageDTOV2;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Qualifier("topic-producer")
 public class KafkaMessageProducerImplV3 implements KafkaMessageProducerV2 {
 
     // -----
