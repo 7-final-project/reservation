@@ -51,7 +51,7 @@ public class ReservationServiceV1 {
         validateIsNotOperating(restaurantData);
 
         // NOTE : 중복 예약 확인
-        validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getRestaurantId());
+        validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getId());
 
         // NOTE : 쿠폰 검증
         if (dto.getReservation().getUserCouponId() != null) {
@@ -84,55 +84,49 @@ public class ReservationServiceV1 {
     }
 
     @Transactional(readOnly = true)
-    public ReservationSearchResDTOV1 searchByAdmin(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
+    public ReservationSearchResDTOV1 searchBy(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
 
-        validateUserRole(PassportUtil.getRole(passport), RoleType.ADMIN);
+        String role = PassportUtil.getRole(passport);
 
-        Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
-                pageable,
-                RoleType.ADMIN,
-                userId,
-                restaurantId,
-                id,
-                sort);
+        Page<ReservationEntity> reservationEntityPage;
 
-        return ReservationSearchResDTOV1.of(reservationEntityPage);
-    }
+        switch (role) {
+            case RoleType.ADMIN:
+                reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
+                        pageable,
+                        "관리자",
+                        userId,
+                        restaurantId,
+                        id,
+                        sort
+                );
+                break;
 
-    @Transactional(readOnly = true)
-    public ReservationSearchResDTOV1 searchByCustomer(Pageable pageable, String passport, Long restaurantId, Long id, String sort) {
+            case RoleType.CUSTOMER:
+                reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
+                        pageable,
+                        "고객",
+                        PassportUtil.getUserId(passport),
+                        restaurantId,
+                        id,
+                        sort
+                );
+                break;
 
-        validateUserRole(PassportUtil.getRole(passport), RoleType.CUSTOMER);
-
-        Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
-                pageable,
-                RoleType.CUSTOMER,
-                PassportUtil.getUserId(passport),
-                restaurantId,
-                id,
-                sort
-        );
-
-        return ReservationSearchResDTOV1.of(reservationEntityPage);
-    }
-
-    @Transactional(readOnly = true)
-    public ReservationSearchResDTOV1 searchByOwner(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
-
-        validateUserRole(PassportUtil.getRole(passport), RoleType.OWNER);
-
-        // 점주의 소유 식당 목록
-        List<Long> restaurantIdListOfOwner = getRestaurantIdListByPassport(passport).getRestaurantList();
-
-        Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(
-                pageable,
-                restaurantIdListOfOwner,
-                userId,
-                restaurantId,
-                id,
-                sort
-        );
-
+            case RoleType.OWNER:
+                List<Long> restaurantIdListOfOwner = getRestaurantIdListByPassport(passport).getRestaurantList();
+                reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(
+                        pageable,
+                        restaurantIdListOfOwner,
+                        userId,
+                        restaurantId,
+                        id,
+                        sort
+                );
+                break;
+            default:
+                throw new UnauthorizedAccessException("접근 권한이 없습니다.");
+        }
         return ReservationSearchResDTOV1.of(reservationEntityPage);
     }
 
@@ -166,10 +160,26 @@ public class ReservationServiceV1 {
     public void sendUserInfoByEvent(QueueAlarmEventDTOV1 event) {
 
         // 유저 정보 조회
-        UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(event.getId()).getBody()).getData();
+        UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(getReservationEntityById(event.getId()).getUserId()).getBody()).getData();
         
         // Kafka 메시지 발행
         kafkaMessageProducerV1.publishUserInfoSendEvent(SendUserInfoMessageDTOV1.of(dto));
+    }
+
+    @Transactional
+    public void deleteByQueueFailEvent(Long id) {
+
+        ReservationEntity reservationEntityForDelete = getReservationEntityById(id);
+
+        reservationRepository.delete(reservationEntityForDelete);
+    }
+
+    @Transactional
+    public void putByQueueFailEvent(Long id) {
+
+        ReservationEntity reservationEntityForModify = getReservationEntityById(id);
+
+        reservationEntityForModify.updateReservationEntityStatus("대기");
     }
 
     private void validateAccess(String passport, Long userId, Long restaurantId) {
@@ -191,7 +201,6 @@ public class ReservationServiceV1 {
         }
     }
 
-
     private RestaurantIdTableResDTOV1 getRestaurantIdListByPassport(String passport) {
         return Objects.requireNonNull(restaurantClientV1.getRestaurantTableByUserId(passport).getBody()).getData();
     }
@@ -199,13 +208,6 @@ public class ReservationServiceV1 {
     private ReservationEntity getReservationEntityById(Long id) {
         return reservationRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 예약입니다."));
-    }
-
-    // NOTE : 접근 권한 검증
-    private void validateUserRole(String role, String requiredRole) {
-        if (!role.equals(requiredRole)) {
-            throw new UnauthorizedAccessException("접근 권한이 없습니다.");
-        }
     }
 
     // NOTE : 식당 영업상태 검증
@@ -231,6 +233,7 @@ public class ReservationServiceV1 {
             throw new BadRequestException(errorMessage);
         }
     }
+
     public void validateStatusForUpdate(ReservationStatus reservationStatus) {
         Set<ReservationStatus> invalidStatusesForUpdate = Set.of(ReservationStatus.CANCELLED, ReservationStatus.SEATED);
         validateReservationStatus(reservationStatus, invalidStatusesForUpdate, "예약 상태가 이미 변경되었습니다.");
