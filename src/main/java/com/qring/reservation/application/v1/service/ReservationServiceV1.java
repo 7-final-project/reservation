@@ -47,7 +47,7 @@ public class ReservationServiceV1 {
         validateIsNotOperating(restaurantData);
 
         // NOTE : 중복 예약 확인
-        //validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getId());
+        validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getId());
 
         // NOTE : 쿠폰 검증
         if (dto.getReservation().getUserCouponId() != null) {
@@ -80,55 +80,49 @@ public class ReservationServiceV1 {
     }
 
     @Transactional(readOnly = true)
-    public ReservationSearchResDTOV1 searchByAdmin(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
+    public ReservationSearchResDTOV1 searchBy(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
 
-        validateUserRole(PassportUtil.getRole(passport), RoleType.ADMIN);
+        String role = PassportUtil.getRole(passport);
 
-        Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
-                pageable,
-                RoleType.ADMIN,
-                userId,
-                restaurantId,
-                id,
-                sort);
+        Page<ReservationEntity> reservationEntityPage;
 
-        return ReservationSearchResDTOV1.of(reservationEntityPage);
-    }
+        switch (role) {
+            case RoleType.ADMIN:
+                reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
+                        pageable,
+                        "관리자",
+                        userId,
+                        restaurantId,
+                        id,
+                        sort
+                );
+                break;
 
-    @Transactional(readOnly = true)
-    public ReservationSearchResDTOV1 searchByCustomer(Pageable pageable, String passport, Long restaurantId, Long id, String sort) {
+            case RoleType.CUSTOMER:
+                reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
+                        pageable,
+                        "고객",
+                        PassportUtil.getUserId(passport),
+                        restaurantId,
+                        id,
+                        sort
+                );
+                break;
 
-        validateUserRole(PassportUtil.getRole(passport), RoleType.CUSTOMER);
-
-        Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithConditions(
-                pageable,
-                RoleType.CUSTOMER,
-                PassportUtil.getUserId(passport),
-                restaurantId,
-                id,
-                sort
-        );
-
-        return ReservationSearchResDTOV1.of(reservationEntityPage);
-    }
-
-    @Transactional(readOnly = true)
-    public ReservationSearchResDTOV1 searchByOwner(Pageable pageable, String passport, Long userId, Long restaurantId, Long id, String sort) {
-
-        validateUserRole(PassportUtil.getRole(passport), RoleType.OWNER);
-
-        // 점주의 소유 식당 목록
-        List<Long> restaurantIdListOfOwner = getRestaurantIdListByPassport(passport).getRestaurantList();
-
-        Page<ReservationEntity> reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(
-                pageable,
-                restaurantIdListOfOwner,
-                userId,
-                restaurantId,
-                id,
-                sort
-        );
-
+            case RoleType.OWNER:
+                List<Long> restaurantIdListOfOwner = getRestaurantIdListByPassport(passport).getRestaurantList();
+                reservationEntityPage = reservationRepository.findReservationPageByDeletedAtIsNullWithOwnerConditions(
+                        pageable,
+                        restaurantIdListOfOwner,
+                        userId,
+                        restaurantId,
+                        id,
+                        sort
+                );
+                break;
+            default:
+                throw new UnauthorizedAccessException("접근 권한이 없습니다.");
+        }
         return ReservationSearchResDTOV1.of(reservationEntityPage);
     }
 
