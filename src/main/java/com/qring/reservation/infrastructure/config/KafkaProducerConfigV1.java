@@ -1,9 +1,11 @@
 package com.qring.reservation.infrastructure.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -15,7 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaProducerConfig {
+@ConditionalOnProperty(name = "version.v1.enabled", havingValue = "true", matchIfMissing = true)
+@Slf4j(topic = "KafkaProducerConfigV1 : 단일 파티션")
+public class KafkaProducerConfigV1 {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String kafkaServer;
@@ -36,6 +40,6 @@ public class KafkaProducerConfig {
 
     @Bean
     public NewTopic reservationCreateEventTopic() {
-        return new NewTopic("reservation-create-event-topic", 1, (short) 1);
+        return new NewTopic("reservation-create-event-topic-v1", 1, (short) 1);
     }
 }
