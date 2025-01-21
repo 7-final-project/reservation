@@ -1,8 +1,8 @@
-package com.qring.reservation.infrastructure.messaging;
+package com.qring.reservation.infrastructure.messaging.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qring.reservation.application.v1.service.ReservationServiceV1;
-import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.v1.dto.QueueAlarmEventDTOV1;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

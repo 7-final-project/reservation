@@ -12,11 +12,11 @@ import com.qring.reservation.domain.model.constraint.RoleType;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.AuthClient;
 import com.qring.reservation.infrastructure.client.CouponClient;
-import com.qring.reservation.infrastructure.client.RestaurantClient;
-import com.qring.reservation.infrastructure.messaging.dto.CreateReservationMessageDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.QueueAlarmEventDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.SendUserInfoMessageDTOV1;
-import com.qring.reservation.infrastructure.messaging.dto.UpdateReservationMessageDTOV1;
+import com.qring.reservation.infrastructure.client.RestaurantClientV1;
+import com.qring.reservation.infrastructure.messaging.v1.dto.CreateReservationMessageDTOV1;
+import com.qring.reservation.infrastructure.messaging.v1.dto.QueueAlarmEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.v1.dto.SendUserInfoMessageDTOV1;
+import com.qring.reservation.infrastructure.messaging.v1.dto.UpdateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
@@ -34,7 +34,7 @@ public class ReservationServiceV1 {
 
     private final ReservationRepository reservationRepository;
     private final KafkaMessageProducerV1 kafkaMessageProducerV1;
-    private final RestaurantClient restaurantClient;
+    private final RestaurantClientV1 restaurantClientV1;
     private final CouponClient couponClient;
     private final AuthClient authClient;
 
@@ -189,7 +189,7 @@ public class ReservationServiceV1 {
 
 
     private RestaurantIdTableResDTOV1 getRestaurantIdListByPassport(String passport) {
-        return Objects.requireNonNull(restaurantClient.getRestaurantTableByUserId(passport).getBody()).getData();
+        return Objects.requireNonNull(restaurantClientV1.getRestaurantTableByUserId(passport).getBody()).getData();
     }
     
     private ReservationEntity getReservationEntityById(Long id) {
@@ -253,7 +253,7 @@ public class ReservationServiceV1 {
 
     // NOTE : 식당 조회
     private RestaurantGetByIdResDTOV1 getRestaurantDataByRestaurantId(Long restaurantId) {
-        return restaurantClient.getBy(restaurantId).getBody().getData();
+        return restaurantClientV1.getBy(restaurantId).getBody().getData();
     }
 
     // NOTE : 내 쿠폰 조회

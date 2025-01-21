@@ -1,4 +1,4 @@
-package com.qring.reservation.infrastructure.messaging.dto;
+package com.qring.reservation.infrastructure.messaging.v1.dto;
 
 import com.qring.reservation.application.v1.res.RestaurantGetByIdResDTOV1;
 import com.qring.reservation.domain.model.ReservationEntity;
