@@ -1,5 +1,6 @@
 package com.qring.reservation.application.v1.res;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,8 +18,9 @@ public class RestaurantGetByIdResDTOV1 {
     @NoArgsConstructor
     public static class Restaurant {
 
-        private Long restaurantId;
+        private Long id;
         private Long categoryId;
+        private String regionCode;
         private String name;
         private String tel;
         private String operationStatus; // NOTE : "영업중" 만 취급하고 있음

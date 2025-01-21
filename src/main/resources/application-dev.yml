@@ -42,6 +42,8 @@ spring:
       reservation-update-event: reservation-update-event-topic
       userinfo-send-event: userinfo-send-event-topic
       queue-alarm-event: queue-alarm-event-topic
+      queue-create-fail-event: queue-create-fail-event-topic
+      queue-delete-fail-event: queue-delete-fail-event-topic
 
   config:
     import: classpath:application-key.yml

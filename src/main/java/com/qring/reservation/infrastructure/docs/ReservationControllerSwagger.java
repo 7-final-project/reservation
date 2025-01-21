@@ -41,43 +41,18 @@ public interface ReservationControllerSwagger {
     ResponseEntity<ResDTO<ReservationGetByIdResDTOV1>> getBy(@RequestHeader("X-Passport-Token") String passport, @PathVariable Long id);
 
 
-    @Operation(summary = "관리자 예약 검색", description = "동적 조건을 기준으로 관리자가 예약을 검색하는 API 입니다.")
+    @Operation(summary = "예약 검색", description = "동적 조건을 기준으로 예약을 검색하는 API 입니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예약 검색 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
             @ApiResponse(responseCode = "400", description = "예약 검색 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
     })
-    @GetMapping("/admin")
-    ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByAdmin(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                    @RequestHeader("X-Passport-Token") String passport,
-                                                                    @RequestParam(name = "userId", required = false) Long userId,
-                                                                    @RequestParam(name = "restaurantId", required = false) Long restaurantId,
-                                                                    @RequestParam(name = "id", required = false) Long id,
-                                                                    @RequestParam(name = "sort", required = false) String sort);
-
-    @Operation(summary = "고객 예약 검색", description = "동적 조건을 기준으로 고객이 예약을 검색하는 API 입니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "예약 검색 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
-            @ApiResponse(responseCode = "400", description = "예약 검색 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
-    })
-    @GetMapping("/customer")
-    ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByCustomer(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                       @RequestHeader("X-Passport-Token") String passport,
-                                                                       @RequestParam(name = "restaurantId", required = false) Long restaurantId,
-                                                                       @RequestParam(name = "id", required = false) Long id,
-                                                                       @RequestParam(name = "sort", required = false) String sort);
-
-    @Operation(summary = "점주 예약 검색", description = "동적 조건을 기준으로 점주가 예약을 검색하는 API 입니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "예약 검색 성공", content = @Content(schema = @Schema(implementation = ResDTO.class))),
-            @ApiResponse(responseCode = "400", description = "예약 검색 실패.", content = @Content(schema = @Schema(implementation = ResDTO.class)))
-    })
-    @GetMapping("/owner")
-    ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByOwner(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                    @RequestHeader("X-Passport-Token") String passport,
-                                                                    @RequestParam(name = "userId", required = false) Long userId,
-                                                                    @RequestParam(name = "restaurantId", required = false) Long restaurantId,
-                                                                    @RequestParam(name = "id", required = false) Long id,
-                                                                    @RequestParam(name = "sort", required = false) String sort);
+    @GetMapping
+    ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchBy(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+                                                               @RequestHeader("X-Passport-Token") String passport,
+                                                               @RequestParam(name = "userId", required = false) Long userId,
+                                                               @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                               @RequestParam(name = "id", required = false) Long id,
+                                                               @RequestParam(name = "sort", required = false) String sort);
 
 
     @Operation(summary = "예약 상태 수정", description = "사용자의 ID 와 예약 ID 를 기준으로 예약 상태를 수정하는 API 입니다.")

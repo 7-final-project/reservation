@@ -52,54 +52,19 @@ public class ReservationControllerV1 implements ReservationControllerSwagger {
         );
     }
 
-    @GetMapping("/admin")
-    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByAdmin(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                           @RequestHeader("X-Passport-Token") String passport,
-                                                                           @RequestParam(name = "userId", required = false) Long userId,
-                                                                           @RequestParam(name = "restaurantId", required = false) Long restaurantId,
-                                                                           @RequestParam(name = "id", required = false) Long id,
-                                                                           @RequestParam(name = "sort", required = false) String sort) {
+    @GetMapping
+    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchBy(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+                                                                      @RequestHeader("X-Passport-Token") String passport,
+                                                                      @RequestParam(name = "userId", required = false) Long userId,
+                                                                      @RequestParam(name = "restaurantId", required = false) Long restaurantId,
+                                                                      @RequestParam(name = "id", required = false) Long id,
+                                                                      @RequestParam(name = "sort", required = false) String sort) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationSearchResDTOV1>builder()
                         .code(HttpStatus.OK.value())
                         .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByAdmin(pageable, passport, userId, restaurantId, id, sort))
-                        .build(),
-                HttpStatus.OK
-        );
-    }
-
-    @GetMapping("/customer")
-    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByCustomer(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                              @RequestHeader("X-Passport-Token") String passport,
-                                                                              @RequestParam(name = "restaurantId", required = false) Long restaurantId,
-                                                                              @RequestParam(name = "id", required = false) Long id,
-                                                                              @RequestParam(name = "sort", required = false) String sort) {
-
-        return new ResponseEntity<>(
-                ResDTO.<ReservationSearchResDTOV1>builder()
-                        .code(HttpStatus.OK.value())
-                        .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByCustomer(pageable, passport, restaurantId, id, sort))
-                        .build(),
-                HttpStatus.OK
-        );
-    }
-
-    @GetMapping("/owner")
-    public ResponseEntity<ResDTO<ReservationSearchResDTOV1>> searchByOwner(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
-                                                                           @RequestHeader("X-Passport-Token") String passport,
-                                                                           @RequestParam(name = "userId", required = false) Long userId,
-                                                                           @RequestParam(name = "restaurantId", required = false) Long restaurantId,
-                                                                           @RequestParam(name = "id", required = false) Long id,
-                                                                           @RequestParam(name = "sort", required = false) String sort) {
-
-        return new ResponseEntity<>(
-                ResDTO.<ReservationSearchResDTOV1>builder()
-                        .code(HttpStatus.OK.value())
-                        .message("예약 검색에 성공했습니다.")
-                        .data(reservationServiceV1.searchByOwner(pageable, passport, userId, restaurantId, id, sort))
+                        .data(reservationServiceV1.searchBy(pageable, passport, userId, restaurantId, id, sort))
                         .build(),
                 HttpStatus.OK
         );

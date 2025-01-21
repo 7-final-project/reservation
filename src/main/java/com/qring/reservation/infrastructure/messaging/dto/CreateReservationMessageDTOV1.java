@@ -74,7 +74,7 @@ public class CreateReservationMessageDTOV1 {
 
             public static Restaurant from(RestaurantGetByIdResDTOV1 restaurantData) {
                 return Restaurant.builder()
-                        .id(restaurantData.getRestaurant().getRestaurantId())
+                        .id(restaurantData.getRestaurant().getId())
                         .name(restaurantData.getRestaurant().getName())
                         .tel(restaurantData.getRestaurant().getTel())
                         .build();
