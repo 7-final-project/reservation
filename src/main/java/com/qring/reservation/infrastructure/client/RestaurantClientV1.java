@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(name = "restaurant-service")
-public interface RestaurantClient {
+public interface RestaurantClientV1 {
 
     @GetMapping("/v1/restaurants/{id}")
     ResponseEntity<ResDTO<RestaurantGetByIdResDTOV1>> getBy(@PathVariable(name = "id") Long id);
