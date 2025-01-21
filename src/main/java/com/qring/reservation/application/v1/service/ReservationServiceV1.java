@@ -32,6 +32,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ReservationServiceV1 {
 
+    // -----
+    // NOTE : 단일 파티션을 적용한 서비스입니다.
+    // -----
+
     private final ReservationRepository reservationRepository;
     private final KafkaMessageProducerV1 kafkaMessageProducerV1;
     private final RestaurantClientV1 restaurantClientV1;

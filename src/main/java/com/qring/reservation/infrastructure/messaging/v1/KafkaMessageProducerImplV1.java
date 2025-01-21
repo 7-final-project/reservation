@@ -13,7 +13,18 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class KafkaMessageProducerImplV1 implements KafkaMessageProducerV1 {
 
+    // -----
+    // NOTE : 단일 파티션을 적용한 서비스입니다.
+    // -----
+
     @Value("${spring.kafka.topic.reservation-create-event.v1}")
+    // -----
+    /*
+        NOTE
+          1. 단일 파티션 : v1
+          2. 단일 파티션 + 배치처리 : v2
+    */
+    // -----
     private String reservationCreateEventTopic;
 
     @Value("${spring.kafka.topic.reservation-update-event}")
