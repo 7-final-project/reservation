@@ -206,13 +206,6 @@ public class ReservationServiceV1 {
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 예약입니다."));
     }
 
-    // NOTE : 접근 권한 검증
-    private void validateUserRole(String role, String requiredRole) {
-        if (!role.equals(requiredRole)) {
-            throw new UnauthorizedAccessException("접근 권한이 없습니다.");
-        }
-    }
-
     // NOTE : 식당 영업상태 검증
     private void validateIsNotOperating(RestaurantGetByIdResDTOV1 restaurantDataForValidate) {
         if (!restaurantDataForValidate.isOperating()) {
