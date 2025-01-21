@@ -15,7 +15,14 @@ public class KafkaMessageProducerImplV2 implements KafkaMessageProducerV2 {
     // NOTE : 다중 파티션을 적용한 서비스입니다. 지역 코드를 key 로 가집니다.
     // -----
 
-    @Value("${spring.kafka.topic.reservation-create-event.v2}")
+    @Value("${spring.kafka.topic.reservation-create-event.v3}")
+    // -----
+    /*
+        NOTE
+          1. 다중 파티션 : v3
+          2. 다중 파티션 + 배치처리 : v4
+    */
+    // -----
     private String reservationCreateEventTopic;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
