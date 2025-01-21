@@ -12,7 +12,6 @@ import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClientV1;
-import com.qring.reservation.infrastructure.client.RestaurantClientV2;
 import com.qring.reservation.infrastructure.messaging.v2.dto.CreateReservationMessageDTOV2;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
