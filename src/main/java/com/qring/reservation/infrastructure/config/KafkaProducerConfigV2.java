@@ -24,6 +24,9 @@ public class KafkaProducerConfigV2 {
     @Value("${spring.kafka.bootstrap-servers}")
     private String kafkaServer;
 
+    @Value("${spring.kafka.topic.reservation-create-event.v2}")
+    private String reservationCreateEventTopic;
+
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -37,6 +40,7 @@ public class KafkaProducerConfigV2 {
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
+
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
@@ -44,6 +48,6 @@ public class KafkaProducerConfigV2 {
 
     @Bean
     public NewTopic reservationCreateEventTopic() {
-        return new NewTopic("reservation-create-event-topic-v2", 1, (short) 1);
+        return new NewTopic(reservationCreateEventTopic, 1, (short) 1);
     }
 }
