@@ -5,6 +5,7 @@ import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
 import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
 import com.qring.reservation.application.v1.service.ReservationServiceV1;
+import com.qring.reservation.application.v2.service.ReservationServiceV2;
 import com.qring.reservation.infrastructure.docs.ReservationControllerSwagger;
 import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
 import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
@@ -20,19 +21,19 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/reservations")
-public class ReservationControllerV1 implements ReservationControllerSwagger {
+public class ReservationControllerV1  {
 
     private final ReservationServiceV1 reservationServiceV1;
+    private final ReservationServiceV2 reservationServiceV2;
 
     @PostMapping
-    public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@RequestHeader("X-Passport-Token") String passport,
-                                                                  @Valid @RequestBody PostReservationReqDTOV1 dto) {
+    public ResponseEntity<ResDTO<ReservationPostResDTOV1>> postBy(@Valid @RequestBody PostReservationReqDTOV1 dto) {
 
         return new ResponseEntity<>(
                 ResDTO.<ReservationPostResDTOV1>builder()
                         .code(HttpStatus.CREATED.value())
                         .message("예약 생성에 성공했습니다.")
-                        .data(reservationServiceV1.postBy(passport, dto))
+                        .data(reservationServiceV2.postBy(dto))
                         .build(),
                 HttpStatus.CREATED
         );

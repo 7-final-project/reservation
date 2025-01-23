@@ -19,9 +19,8 @@ public class CreateReservationMessageDTOV2 {
     private User user;
     private Reservation reservation;
 
-    public static CreateReservationMessageDTOV2 of(String passport, ReservationEntity reservationEntity, RestaurantGetByIdResDTOV2 restaurantData) {
+    public static CreateReservationMessageDTOV2 of(ReservationEntity reservationEntity, RestaurantGetByIdResDTOV2 restaurantData) {
         return CreateReservationMessageDTOV2.builder()
-                .user(User.from(passport))
                 .reservation(Reservation.from(reservationEntity, restaurantData))
                 .build();
     }

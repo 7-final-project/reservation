@@ -16,6 +16,8 @@ public class PostReservationReqDTOV1 {
     @Getter
     public static class Reservation {
 
+        private Long userId;
+
         @NotNull(message = "식당 정보를 입력해주세요.")
         private Long restaurantId;
 

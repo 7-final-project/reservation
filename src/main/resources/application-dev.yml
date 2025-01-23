@@ -60,10 +60,10 @@ version:
   v1:
     enabled: false
   v2:
-    enabled: true
+    enabled: false
   v3:
     enabled: false
   v4:
     enabled: false
   v5:
-    enabled: false
+    enabled: true

@@ -33,7 +33,7 @@ public class ReservationServiceV2 {
     private final RestaurantClientV1 restaurantClientV1;
     private final CouponClient couponClient;
 
-    public ReservationServiceV2(@Qualifier("partition-producer") KafkaMessageProducerV2 kafkaMessageProducerV2,
+    public ReservationServiceV2(@Qualifier("topic-producer") KafkaMessageProducerV2 kafkaMessageProducerV2,
                                 ReservationRepository reservationRepository,
                                 RestaurantClientV1 restaurantClientV1,
                                 CouponClient couponClient) {
@@ -51,7 +51,7 @@ public class ReservationServiceV2 {
     }
 
     @Transactional
-    public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
+    public ReservationPostResDTOV1 postBy(PostReservationReqDTOV1 dto) {
 
         RestaurantGetByIdResDTOV2 restaurantData = getRestaurantDataByRestaurantId(dto.getReservation().getRestaurantId());
 
@@ -59,16 +59,16 @@ public class ReservationServiceV2 {
         validateIsNotOperating(restaurantData);
 
         // NOTE : 중복 예약 확인
-        validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getId());
+        //validateReservationDuplication(PassportUtil.getUserId(passport), restaurantData.getRestaurant().getId());
 
         // NOTE : 쿠폰 검증
-        if (dto.getReservation().getUserCouponId() != null) {
-            validateUserCouponAccess(dto.getReservation().getUserCouponId(), passport);
-        }
+//        if (dto.getReservation().getUserCouponId() != null) {
+//            validateUserCouponAccess(dto.getReservation().getUserCouponId(), passport);
+//        }
 
         // NOTE : 예약 생성
         ReservationEntity reservationEntityForSave = ReservationEntity.createReservationEntity(
-                PassportUtil.getUserId(passport),
+                dto.getReservation().getUserId(),
                 dto.getReservation().getRestaurantId(),
                 dto.getReservation().getUserCouponId(),
                 dto.getReservation().getHeadCount()
@@ -78,7 +78,7 @@ public class ReservationServiceV2 {
 
         kafkaMessageProducerV2.publishReservationCreateEvent(
                 restaurantData.getRestaurant().getRegionCode(),
-                CreateReservationMessageDTOV2.of(passport, reservationEntityForSave, restaurantData)
+                CreateReservationMessageDTOV2.of(reservationEntityForSave, restaurantData)
         );
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
