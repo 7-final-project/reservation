@@ -38,11 +38,7 @@ spring:
       properties:
         spring.json.trusted.packages: '*'
     topic:
-      reservation-create-event:
-        v1: reservation-create-event-topic-v1
-        v2: reservation-create-event-topic-v2
-        v3: reservation-create-event-topic-v3
-        v4: reservation-create-event-topic-v4
+      reservation-create-event: reservation-create-event-topic
       reservation-update-event: reservation-update-event-topic
       userinfo-send-event: userinfo-send-event-topic
       queue-alarm-event: queue-alarm-event-topic
@@ -52,15 +48,3 @@ spring:
 service:
   jwt:
     secret-key: ${JWT_SECRET_KEY}
-
-version:
-  v1:
-    enabled: true
-  v2:
-    enabled: false
-  v3:
-    enabled: false
-  v4:
-    enabled: false
-  v5:
-    enabled: false
