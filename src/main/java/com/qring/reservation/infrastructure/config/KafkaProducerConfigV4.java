@@ -5,7 +5,6 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -17,14 +16,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@ConditionalOnProperty(name = "version.v4.enabled", havingValue = "true", matchIfMissing = true)
-@Slf4j(topic = "KafkaProducerConfigV4 : 다중 파티션 + 배치처리")
+@Slf4j(topic = "KafkaProducerConfigV4")
 public class KafkaProducerConfigV4 {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String kafkaServer;
 
-    @Value("${spring.kafka.topic.reservation-create-event.v4}")
+    @Value("${spring.kafka.topic.reservation-create-event}")
     private String reservationCreateEventTopic;
 
     @Bean

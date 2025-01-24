@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Slf4j(topic = "KafkaMessageConsumerV1")
 public class KafkaMessageConsumerV1 {
 
     private final ReservationServiceV2 reservationServiceV2;
