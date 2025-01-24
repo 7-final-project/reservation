@@ -1,21 +1,19 @@
 package com.qring.reservation.infrastructure.messaging.kafka;
 
-import com.qring.reservation.application.message.KafkaMessageProducerV2;
+import com.qring.reservation.application.messaging.KafkaMessageProducerV2;
 import com.qring.reservation.infrastructure.messaging.kafka.dto.CreateReservationMessageDTOV2;
 import com.qring.reservation.infrastructure.messaging.kafka.dto.SendUserInfoMessageDTOV1;
 import com.qring.reservation.infrastructure.messaging.kafka.dto.UpdateReservationMessageDTOV1;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-@Qualifier("partition-producer")
 public class KafkaMessageProducerImplV2 implements KafkaMessageProducerV2 {
 
-    @Value("${spring.kafka.topic.reservation-create-event.v3}")
+    @Value("${spring.kafka.topic.reservation-create-event}")
     private String reservationCreateEventTopic;
 
     @Value("${spring.kafka.topic.reservation-update-event}")
