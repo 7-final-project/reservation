@@ -4,7 +4,7 @@ import com.qring.reservation.application.global.exception.BadRequestException;
 import com.qring.reservation.application.global.exception.DuplicateResourceException;
 import com.qring.reservation.application.global.exception.EntityNotFoundException;
 import com.qring.reservation.application.global.exception.UnauthorizedAccessException;
-import com.qring.reservation.application.message.KafkaMessageProducerV2;
+import com.qring.reservation.application.messaging.KafkaMessageProducerV2;
 import com.qring.reservation.application.res.*;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;

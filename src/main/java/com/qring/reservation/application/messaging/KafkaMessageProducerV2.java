@@ -1,4 +1,4 @@
-package com.qring.reservation.application.message;
+package com.qring.reservation.application.messaging;
 
 import com.qring.reservation.infrastructure.messaging.kafka.dto.CreateReservationMessageDTOV2;
 import com.qring.reservation.infrastructure.messaging.kafka.dto.SendUserInfoMessageDTOV1;
