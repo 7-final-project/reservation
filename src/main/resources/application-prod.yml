@@ -31,7 +31,7 @@ spring:
     open-in-view: false
 
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: ${KAFKA_PROD_URL}
     consumer:
       group-id: ${spring.application.name}-group
       auto-offset-reset: earliest
@@ -46,7 +46,21 @@ spring:
       reservation-update-event: reservation-update-event-topic
       userinfo-send-event: userinfo-send-event-topic
       queue-alarm-event: queue-alarm-event-topic
+      queue-create-fail-event: queue-create-fail-event-topic
+      queue-delete-fail-event: queue-delete-fail-event-topic
 
 service:
   jwt:
     secret-key: ${JWT_SECRET_KEY}
+
+version:
+  v1:
+    enabled: true
+  v2:
+    enabled: false
+  v3:
+    enabled: false
+  v4:
+    enabled: false
+  v5:
+    enabled: false

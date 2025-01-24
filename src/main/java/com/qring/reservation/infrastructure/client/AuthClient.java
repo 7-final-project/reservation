@@ -1,7 +1,7 @@
 package com.qring.reservation.infrastructure.client;
 
 import com.qring.reservation.application.global.dto.ResDTO;
-import com.qring.reservation.application.v1.res.UserGetByIdResDTOV1;
+import com.qring.reservation.application.res.UserGetByIdResDTOV1;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
