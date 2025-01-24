@@ -1,7 +1,6 @@
-package com.qring.reservation.infrastructure.messaging.v2.dto;
+package com.qring.reservation.infrastructure.messaging.kafka.dto;
 
-import com.qring.reservation.application.v1.res.RestaurantGetByIdResDTOV1;
-import com.qring.reservation.application.v2.res.RestaurantGetByIdResDTOV2;
+import com.qring.reservation.application.res.RestaurantGetByIdResDTOV2;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.infrastructure.util.PassportUtil;
 import lombok.AllArgsConstructor;

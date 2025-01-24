@@ -1,4 +1,4 @@
-package com.qring.reservation.infrastructure.messaging.v1.dto;
+package com.qring.reservation.infrastructure.messaging.kafka.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

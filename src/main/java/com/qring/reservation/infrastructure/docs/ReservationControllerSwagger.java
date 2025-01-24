@@ -1,11 +1,11 @@
 package com.qring.reservation.infrastructure.docs;
 
 import com.qring.reservation.application.global.dto.ResDTO;
-import com.qring.reservation.application.v1.res.ReservationGetByIdResDTOV1;
-import com.qring.reservation.application.v1.res.ReservationPostResDTOV1;
-import com.qring.reservation.application.v1.res.ReservationSearchResDTOV1;
-import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
-import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
+import com.qring.reservation.application.res.ReservationGetByIdResDTOV1;
+import com.qring.reservation.application.res.ReservationPostResDTOV1;
+import com.qring.reservation.application.res.ReservationSearchResDTOV1;
+import com.qring.reservation.presentation.req.PostReservationReqDTOV1;
+import com.qring.reservation.presentation.req.PutReservationReqDTOV1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

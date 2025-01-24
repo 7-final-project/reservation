@@ -1,4 +1,4 @@
-package com.qring.reservation.application.v1.res;
+package com.qring.reservation.application.res;
 
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
@@ -11,13 +11,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReservationGetByIdResDTOV1 {
+public class ReservationPostResDTOV1 {
 
     private Reservation reservation;
-    private ReservationInfo reservationInfo;
 
-    public static ReservationGetByIdResDTOV1 of(ReservationEntity reservationEntity) {
-        return ReservationGetByIdResDTOV1.builder()
+    public static ReservationPostResDTOV1 of(ReservationEntity reservationEntity) {
+        return ReservationPostResDTOV1.builder()
                 .reservation(Reservation.from(reservationEntity))
                 .build();
     }
@@ -43,25 +42,6 @@ public class ReservationGetByIdResDTOV1 {
                     .userCouponId(reservationEntity.getUserCouponId())
                     .status(reservationEntity.getStatus())
                     .headCount(reservationEntity.getHeadCount())
-                    .build();
-        }
-    }
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ReservationInfo {
-
-        private Long userId;
-        private Long restaurantId;
-        private String status;
-
-        public static ReservationInfo from(Long userId, Long restaurantId, String status) {
-            return ReservationInfo.builder()
-                    .userId(userId)
-                    .restaurantId(restaurantId)
-                    .status(status)
                     .build();
         }
     }

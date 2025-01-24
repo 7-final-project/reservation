@@ -1,6 +1,6 @@
-package com.qring.reservation.infrastructure.messaging.v1.dto;
+package com.qring.reservation.infrastructure.messaging.kafka.dto;
 
-import com.qring.reservation.application.v1.res.UserGetByIdResDTOV1;
+import com.qring.reservation.application.res.UserGetByIdResDTOV1;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

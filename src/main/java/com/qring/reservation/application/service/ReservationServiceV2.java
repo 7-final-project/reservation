@@ -1,11 +1,11 @@
-package com.qring.reservation.application.v1.service;
+package com.qring.reservation.application.service;
 
 import com.qring.reservation.application.global.exception.BadRequestException;
 import com.qring.reservation.application.global.exception.DuplicateResourceException;
 import com.qring.reservation.application.global.exception.EntityNotFoundException;
 import com.qring.reservation.application.global.exception.UnauthorizedAccessException;
-import com.qring.reservation.application.v1.message.KafkaMessageProducerV1;
-import com.qring.reservation.application.v1.res.*;
+import com.qring.reservation.application.message.KafkaMessageProducerV2;
+import com.qring.reservation.application.res.*;
 import com.qring.reservation.domain.model.ReservationEntity;
 import com.qring.reservation.domain.model.constraint.ReservationStatus;
 import com.qring.reservation.domain.model.constraint.RoleType;
@@ -13,31 +13,31 @@ import com.qring.reservation.domain.repository.ReservationRepository;
 import com.qring.reservation.infrastructure.client.AuthClient;
 import com.qring.reservation.infrastructure.client.CouponClient;
 import com.qring.reservation.infrastructure.client.RestaurantClientV1;
-import com.qring.reservation.infrastructure.messaging.v1.dto.CreateReservationMessageDTOV1;
-import com.qring.reservation.infrastructure.messaging.v1.dto.QueueAlarmEventDTOV1;
-import com.qring.reservation.infrastructure.messaging.v1.dto.SendUserInfoMessageDTOV1;
-import com.qring.reservation.infrastructure.messaging.v1.dto.UpdateReservationMessageDTOV1;
+import com.qring.reservation.infrastructure.messaging.kafka.dto.CreateReservationMessageDTOV2;
+import com.qring.reservation.infrastructure.messaging.kafka.dto.QueueAlarmEventDTOV1;
+import com.qring.reservation.infrastructure.messaging.kafka.dto.SendUserInfoMessageDTOV1;
+import com.qring.reservation.infrastructure.messaging.kafka.dto.UpdateReservationMessageDTOV1;
 import com.qring.reservation.infrastructure.util.PassportUtil;
-import com.qring.reservation.presentation.v1.req.PostReservationReqDTOV1;
-import com.qring.reservation.presentation.v1.req.PutReservationReqDTOV1;
+import com.qring.reservation.presentation.req.PostReservationReqDTOV1;
+import com.qring.reservation.presentation.req.PutReservationReqDTOV1;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class ReservationServiceV1 {
+@Slf4j(topic = "ReservationServiceV2")
+public class ReservationServiceV2 {
 
-    // -----
-    // NOTE : 단일 파티션을 적용한 서비스입니다.
-    // -----
-
+    private final KafkaMessageProducerV2 kafkaMessageProducerV2;
     private final ReservationRepository reservationRepository;
-    private final KafkaMessageProducerV1 kafkaMessageProducerV1;
     private final RestaurantClientV1 restaurantClientV1;
     private final CouponClient couponClient;
     private final AuthClient authClient;
@@ -45,7 +45,7 @@ public class ReservationServiceV1 {
     @Transactional
     public ReservationPostResDTOV1 postBy(String passport, PostReservationReqDTOV1 dto) {
 
-        RestaurantGetByIdResDTOV1 restaurantData = getRestaurantDataByRestaurantId(dto.getReservation().getRestaurantId());
+        RestaurantGetByIdResDTOV2 restaurantData = getRestaurantDataByRestaurantId(dto.getReservation().getRestaurantId());
 
         // NOTE : 운영시간 검증
         validateIsNotOperating(restaurantData);
@@ -68,7 +68,10 @@ public class ReservationServiceV1 {
 
         reservationRepository.save(reservationEntityForSave);
 
-        kafkaMessageProducerV1.publishReservationCreateEvent(CreateReservationMessageDTOV1.of(passport, reservationEntityForSave, restaurantData));
+        kafkaMessageProducerV2.publishReservationCreateEvent(
+                restaurantData.getRestaurant().getRegionCode(),
+                CreateReservationMessageDTOV2.of(passport, reservationEntityForSave, restaurantData)
+        );
 
         return ReservationPostResDTOV1.of(reservationEntityForSave);
     }
@@ -141,7 +144,7 @@ public class ReservationServiceV1 {
 
         reservationEntityForModify.updateReservationEntityStatus(dto.getReservation().getStatus());
 
-        kafkaMessageProducerV1.publishReservationUpdateEvent(UpdateReservationMessageDTOV1.of(reservationEntityForModify));
+        kafkaMessageProducerV2.publishReservationUpdateEvent(UpdateReservationMessageDTOV1.of(reservationEntityForModify));
 
     }
 
@@ -161,9 +164,9 @@ public class ReservationServiceV1 {
 
         // 유저 정보 조회
         UserGetByIdResDTOV1 dto = Objects.requireNonNull(authClient.getBy(getReservationEntityById(event.getId()).getUserId()).getBody()).getData();
-        
+
         // Kafka 메시지 발행
-        kafkaMessageProducerV1.publishUserInfoSendEvent(SendUserInfoMessageDTOV1.of(dto));
+        kafkaMessageProducerV2.publishUserInfoSendEvent(SendUserInfoMessageDTOV1.of(dto));
     }
 
     @Transactional
@@ -204,14 +207,14 @@ public class ReservationServiceV1 {
     private RestaurantIdTableResDTOV1 getRestaurantIdListByPassport(String passport) {
         return Objects.requireNonNull(restaurantClientV1.getRestaurantTableByUserId(passport).getBody()).getData();
     }
-    
+
     private ReservationEntity getReservationEntityById(Long id) {
         return reservationRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 예약입니다."));
     }
 
     // NOTE : 식당 영업상태 검증
-    private void validateIsNotOperating(RestaurantGetByIdResDTOV1 restaurantDataForValidate) {
+    private void validateIsNotOperating(RestaurantGetByIdResDTOV2 restaurantDataForValidate) {
         if (!restaurantDataForValidate.isOperating()) {
             throw new BadRequestException("영업중인 식당이 아닙니다.");
         }
@@ -259,8 +262,8 @@ public class ReservationServiceV1 {
     }
 
     // NOTE : 식당 조회
-    private RestaurantGetByIdResDTOV1 getRestaurantDataByRestaurantId(Long restaurantId) {
-        return restaurantClientV1.getByV1(restaurantId).getBody().getData();
+    private RestaurantGetByIdResDTOV2 getRestaurantDataByRestaurantId(Long restaurantId) {
+        return restaurantClientV1.getBy(restaurantId).getBody().getData();
     }
 
     // NOTE : 내 쿠폰 조회

@@ -1,4 +1,4 @@
-package com.qring.reservation.presentation.v1.req;
+package com.qring.reservation.presentation.req;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.qring.reservation.presentation.v1.req;
+package com.qring.reservation.presentation.req;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
